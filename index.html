@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <meta charset="utf-8" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/dayjs@1.8.0/dayjs.min.js"></script>
+    <script src="app-worker.js" defer></script>
+    <script src="app-ui.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <style>
+    :root {
+      --black: #202225;
+      --grey-darkest: #2f3136;
+      --grey-darker: #36393f;
+      --grey-dark: #ffffff33;
+      --grey: #ffffff66;
+      --grey-light: #42464d;
+      --grey-lighter: #b9bbbe;
+      --grey-lightest: #dcddde;
+      --purple-darker: #5b6eae;
+      --purple-dark: #677bc4;
+      --purple: #7289da;
+      --red: #f04747;
+    }
+
+    .bg-black {
+      background-color: var(--black);
+    }
+
+    .hover\:border-black:hover {
+      border-color: var(--black);
+    }
+
+    .bg-grey-darkest {
+      background-color: var(--grey-darkest);
+    }
+
+    .bg-grey-darker {
+      background-color: var(--grey-darker);
+    }
+
+    .hover\:bg-grey-darker:hover {
+      background-color: var(--grey-darker);
+    }
+
+    .text-grey-dark {
+      color: var(--grey-dark);
+    }
+
+    .border-grey-dark {
+      border-color: var(--grey-dark);
+    }
+
+    .bg-grey-light {
+      background-color: var(--grey-light);
+    }
+
+    .text-grey-lighter {
+      color: var(--grey-lighter);
+    }
+
+    .text-grey-lightest {
+      color: var(--grey-lightest);
+    }
+
+    .hover\:bg-purple-dark:hover {
+      background-color: var(--purple-dark);
+    }
+
+    .active\:bg-purple-darker:active {
+      background-color: var(--purple-darker);
+    }
+
+    .text-purple {
+      color: var(--purple);
+    }
+
+    .bg-purple {
+      background-color: var(--purple);
+    }
+
+    .focus\:border-purple:focus {
+      border-color: var(--purple);
+    }
+
+    .text-red {
+      color: var(--red) !important;
+    }
+
+    .border-red {
+      border-color: var(--red) !important;
+    }
+
+    .transition-border {
+      transition: border 0.15s ease;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .container {
+      padding-top: 16.66667vh;
+      padding-bottom: 16.66667vh;
+    }
+
+    body {
+      background-image: url("https://discordapp.com/assets/14c037b7102f18b2d2ccf065a52bb595.jpg");
+      background-size: cover;
+      background-position: center;
+    }
+
+    /* Scrollbar */
+
+    ::-webkit-scrollbar {
+      width: 12px;
+    }
+
+    ::-webkit-scrollbar-track {
+      border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      border-radius: 10px;
+      background-color: var(--black);
+    }
+
+    #chats::-webkit-scrollbar-track,
+    #messages::-webkit-scrollbar-track,
+    #users::-webkit-scrollbar-track {
+      border: 3px solid;
+      margin: 5px;
+    }
+
+    #chats::-webkit-scrollbar-track,
+    #users::-webkit-scrollbar-track {
+      border-color: var(--grey-darkest);
+    }
+
+    #messages::-webkit-scrollbar-track {
+      background-color: var(--grey-darkest);
+      border-color: var(--grey-darker);
+    }
+
+    #chats::-webkit-scrollbar-thumb,
+    #messages::-webkit-scrollbar-thumb,
+    #users::-webkit-scrollbar-thumb {
+      border: 3px solid;
+    }
+
+    #chats::-webkit-scrollbar-thumb,
+    #users::-webkit-scrollbar-thumb {
+      border-color: var(--grey-darkest);
+    }
+
+    #messages::-webkit-scrollbar-thumb {
+      border-color: var(--grey-darker);
+    }
+
+    /* Register */
+
+    #register-container form {
+      width: 480px;
+    }
+  </style>
+  <body>
+    <div class="container mx-auto h-screen">
+      <!-- Register -->
+      <div
+        id="register-container"
+        class="flex justify-center items-center h-full hidden"
+      >
+        <form
+          id="register-form"
+          class="bg-grey-darker shadow-md rounded px-8 py-8"
+        >
+          <div class="mb-4">
+            <label
+              class="block text-sm text-grey-lighter font-bold mb-2"
+              for="username"
+            >
+              Username
+            </label>
+            <input
+              class="py-2 px-3 text-base text-grey-lightest bg-grey-darkest border border-grey-dark rounded w-full leading-tight hover:border-black focus:border-purple focus:outline-none transition-border"
+              type="text"
+              autofocus
+            />
+          </div>
+          <button
+            class="py-2 px-4 bg-purple text-base text-white rounded w-full hover:bg-purple-dark focus:outline-none active:bg-purple-darker"
+            type="submit"
+          >
+            Join
+          </button>
+        </form>
+      </div>
+
+      <!-- Chat UI -->
+      <div id="app-container" class="flex h-full rounded-lg shadow-md hidden">
+        <!-- Chats list -->
+        <div
+          id="chats-container"
+          class="w-1/5 bg-grey-darkest rounded-l-lg flex flex-col hidden"
+        >
+          <ul id="chats" class="list-reset px-2 py-1 h-full overflow-auto"></ul>
+
+          <div class="px-4 py-2 bg-black rounded-bl-lg">
+            <div id="my-username" class="mb-1 text-base text-white"></div>
+            <div id="my-tag" class="text-sm text-white opacity-50"></div>
+          </div>
+        </div>
+
+        <!-- Instructions -->
+        <div
+          id="instructions-container"
+          class="w-4/5 bg-grey-darker rounded-r-lg flex items-center justify-center hidden"
+        >
+          <ul class="list-reset">
+            <li class="py-4 text-lg text-grey-lighter">
+              1. Click on a chat on the list to the left, to join the chat room
+              and start chatting!
+            </li>
+            <li class="py-4 text-lg text-grey-lighter">
+              2. Create a new chat by clicking the button on the bottom of the
+              list to the left. (todo)
+            </li>
+          </ul>
+        </div>
+
+        <!-- Messages -->
+        <div
+          id="messages-container"
+          class="w-3/5 bg-grey-darker flex flex-col hidden"
+        >
+          <ul
+            id="messages"
+            class="list-reset px-6 pt-2 h-full overflow-auto"
+          ></ul>
+
+          <form
+            id="message-form"
+            class="p-6 bg-grey-darker border-t border-solid border-grey-dark"
+          >
+            <input
+              type="text"
+              class="p-3 text-base text-grey-lightest bg-grey-light rounded-lg w-full focus:outline-none"
+              autofocus
+            />
+          </form>
+        </div>
+
+        <!-- Users list -->
+        <div
+          id="users-container"
+          class="w-1/5 bg-grey-darkest rounded-r-lg hidden"
+        >
+          <ul id="users" class="list-reset px-8 pt-2 h-full overflow-auto"></ul>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
