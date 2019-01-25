@@ -398,7 +398,7 @@ exports.postChatMessage = async function(req, res, chatId) {
  * @param {Response} res The HTTP response.
  */
 exports.staticFile = function(req, res) {
-  serveFile(res, path.join(__dirname, req.url));
+  serveFile(res, path.join(`${__dirname}/public`, req.url));
 };
 
 /**
@@ -409,7 +409,7 @@ exports.staticFile = function(req, res) {
 exports.index = function(req, res) {
   res.setHeader("ContentType", "text/html");
 
-  serveFile(res, path.join(__dirname, "index.html"));
+  serveFile(res, path.join(`${__dirname}/public`, "index.html"));
 };
 
 /**
