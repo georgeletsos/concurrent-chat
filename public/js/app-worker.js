@@ -73,7 +73,7 @@ window.AppWorker = (function() {
     };
 
     /** Start our web worker. */
-    this.api = new Worker("worker.js");
+    this.api = new Worker("js/worker.js");
 
     /** Listen to messages coming from the web worker. */
     this.api.addEventListener("message", e => {
