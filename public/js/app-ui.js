@@ -174,75 +174,76 @@ window.AppUi = (function() {
 
   /**
    * Event handler that takes care of registering a new User by making an API call.
-   * Also shows any validation errors.
    * @param {Event} e The event that took place.
    */
   AppUi.prototype._registerUserHandler = function(e) {
     e.preventDefault();
 
-    let $form = e.target;
+    let $form = e.target,
+      $input = $form.querySelector("input"),
+      $label = $form.querySelector("label"),
+      $button = $form.querySelector("button"),
+      $buttonPulsingDots = $button.querySelector("div"),
+      $buttonText = $button.querySelector("span");
 
-    let username = $form.querySelector("input").value.trim();
+    this._undrawValidation($input, $label);
 
-    /** Make an API call to register a new User... */
-    AppWorker.api
-      .postMessage({
-        action: "registerUser",
-        username: username
-      })
-      /** If a new User was registered successfully... */
-      .then(user => {
-        /** Save the User in local storage. */
-        localStorage.setItem("user", JSON.stringify(user));
+    /** Hide the button text. */
+    $buttonText.classList.add("hidden");
 
-        /** Update the current User. */
-        this.user = user;
+    /** Show the pulsing dots. */
+    $buttonPulsingDots.classList.remove("hidden");
 
-        /** Hide the container of the register user UI. */
-        this._$registerContainer.classList.add("hidden");
+    let username = $input.value.trim();
 
-        /** Finally initialize the app UI. */
-        this.initApp();
-      })
-      /** If a new User couldn't get registered successfully... */
-      .catch(error => {
-        /**
-         * If there was no error, then the problem should be elsewhere.
-         * Otherwise, show the validation message(s).
-         */
-        if (!error) {
-          console.error("Worker rejected promise with no payload");
-          return;
-        }
+    /** Give the pulsing dots half a second... (Doesn't look nice if it's too fast) */
+    setTimeout(() => {
+      /** Make an API call to register a new User... */
+      AppWorker.api
+        .postMessage({
+          action: "registerUser",
+          username: username
+        })
+        /** If a new User was registered successfully... */
+        .then(user => {
+          /** Save the User in local storage. */
+          localStorage.setItem("user", JSON.stringify(user));
 
-        let $input = $form.querySelector("input"),
-          $label = $form.querySelector("label"),
-          $errorMessageSpan = $label.querySelector("[error-message]");
+          /** Update the current User. */
+          this.user = user;
 
-        $label.classList.add("text-red");
+          /** Hide the container of the register user UI. */
+          this._$registerContainer.classList.add("hidden");
 
-        $input.classList.add("border-red");
+          /** Hide the pulsing dots. */
+          $buttonPulsingDots.classList.add("hidden");
 
-        /** Finish here, if there is any visible validation message already. */
-        if ($errorMessageSpan) {
-          return;
-        }
+          /** Show the button text. */
+          $buttonText.classList.remove("hidden");
 
-        let $span = document.createElement("span");
+          /** Finally initialize the app UI. */
+          this.initApp();
+        })
+        /** If a new User couldn't get registered successfully... */
+        .catch(error => {
+          /** Hide the pulsing dots. */
+          $buttonPulsingDots.classList.add("hidden");
 
-        $span.setAttribute("error-message", "");
+          /** Show the button text. */
+          $buttonText.classList.remove("hidden");
 
-        $span.textContent = `- ${error.username}`;
+          /**
+           * If there was no error, then the problem should be elsewhere.
+           * Otherwise, show the validation message(s).
+           */
+          if (!error) {
+            console.error("Worker rejected promise with no payload");
+            return;
+          }
 
-        $span.classList.add(
-          "text-xs",
-          "font-normal",
-          "italic",
-          "tracking-wide"
-        );
-
-        $label.appendChild($span);
-      });
+          this._drawValidation(error.username, $input, $label);
+        });
+    }, 500);
   };
 
   /**
@@ -271,6 +272,50 @@ window.AppUi = (function() {
     });
 
     $message.value = "";
+  };
+
+  /**
+   * Draw a validation error message on the `$label`
+   * and add the error border to the `$input`.
+   * @param {string} validationMessage The validation error message to draw.
+   * @param {Element} $input The input element.
+   * @param {Element} $label The label element of the input element.
+   */
+  AppUi.prototype._drawValidation = function(
+    validationMessage,
+    $input,
+    $label
+  ) {
+    $input.classList.add("border-red");
+
+    $label.classList.add("text-red");
+
+    let $span = document.createElement("span");
+
+    $span.setAttribute("error-message", "");
+
+    $span.textContent = `- ${validationMessage}`;
+
+    $span.classList.add("text-xs", "font-normal", "italic", "tracking-wide");
+
+    $label.appendChild($span);
+  };
+
+  /**
+   * Remove a validation error message from the `$label`
+   * and also remove the error border from the `$input`.
+   * @param {Element} $input The input element.
+   * @param {Element} $label The label element of the input element.
+   */
+  AppUi.prototype._undrawValidation = function($input, $label) {
+    $input.classList.remove("border-red");
+
+    $label.classList.remove("text-red");
+
+    let $span = $label.querySelector("[error-message]");
+    if ($span) {
+      $span.parentNode.removeChild($span);
+    }
   };
 
   /**
