@@ -53,6 +53,10 @@
   color: var(--grey-lightest);
 }
 
+.bg-grey-lightest {
+  background-color: var(--grey-lightest);
+}
+
 .hover\:bg-purple-dark:hover {
   background-color: var(--purple-dark);
 }
@@ -151,4 +155,35 @@ body {
 
 #register-container form {
   width: 480px;
+}
+
+/* Pulse animation */
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-pulse {
+  animation: pulse 1.4s infinite ease-in-out;
+}
+
+.animation-delay-1 {
+  animation-delay: 0.2s;
+}
+
+.animation-delay-2 {
+  animation-delay: 0.4s;
 }
