@@ -1,4 +1,4 @@
-/* global AppWorker, dayjs */
+/* global AppWorker, _, dayjs */
 
 window.AppUi = (function() {
   "use strict";
@@ -12,6 +12,11 @@ window.AppUi = (function() {
 
     /** Current chat id that comes from the page URL. */
     this._chatId = location.pathname.slice(1);
+
+    /** Throttle the register user function */
+    this._registerUserThrottled = _.throttle(this._registerUser, 1e3, {
+      trailing: false
+    });
 
     /** Our main DOM components are defined below. */
     this._$registerContainer = document.getElementById("register-container");
@@ -77,6 +82,9 @@ window.AppUi = (function() {
 
       return;
     }
+
+    /** After successfully logging in, remove the container of the register user UI. */
+    this._$registerContainer.parentNode.removeChild(this._$registerContainer);
 
     /** Show the app UI. */
     this._$appContainer.classList.remove("hidden");
@@ -165,7 +173,7 @@ window.AppUi = (function() {
   };
 
   /**
-   * Set the placeholder of the Message input.
+   * Set the placeholder of the message input.
    * @param {string} chatName
    */
   AppUi.prototype.setMessagePlaceholder = function(chatName) {
@@ -173,12 +181,13 @@ window.AppUi = (function() {
   };
 
   /**
-   * Event handler that takes care of registering a new User by making an API call.
+   * Register a new user by making an API call.
+   * If successful, save the new user to local storage and show the app UI.
+   * If not successful, show validation error(s).
+   * Also show/hide the loading animation on the button.
    * @param {Event} e The event that took place.
    */
-  AppUi.prototype._registerUserHandler = function(e) {
-    e.preventDefault();
-
+  AppUi.prototype._registerUser = function(e) {
     let $form = e.target,
       $input = $form.querySelector("input"),
       $label = $form.querySelector("label"),
@@ -212,9 +221,6 @@ window.AppUi = (function() {
           /** Update the current User. */
           this.user = user;
 
-          /** Hide the container of the register user UI. */
-          this._$registerContainer.classList.add("hidden");
-
           /** Hide the pulsing dots. */
           $buttonPulsingDots.classList.add("hidden");
 
@@ -243,7 +249,17 @@ window.AppUi = (function() {
 
           this._drawValidation(error.username, $input, $label);
         });
-    }, 500);
+    }, 5e2);
+  };
+
+  /**
+   * Event handler that uses the trottled version of the register user function above.
+   * @param {Event} e The event that took place.
+   */
+  AppUi.prototype._registerUserHandler = function(e) {
+    e.preventDefault();
+
+    this._registerUserThrottled(e);
   };
 
   /**
@@ -358,7 +374,7 @@ window.AppUi = (function() {
 
       $div.appendChild($chatName);
 
-      /** If the current chat isn't the same as the iterated chat, then draw a `a.href` element. */
+      /** If the current chat isn't the same as the iterated chat, then draw an `a.href` element. */
       if (this._chatId === chat.id) {
         $div.classList.add("bg-grey-light");
 
