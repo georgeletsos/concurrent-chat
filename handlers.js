@@ -275,6 +275,7 @@ exports.getChats = function(req, res) {
  * If the chat was not found in memory, respond with 404.
  * @param {Request} req The HTTP request.
  * @param {Response} res The HTTP response.
+ * @param {string} chatId The id of the specific chat.
  */
 exports.getChatUsers = function(req, res, chatId) {
   res.setHeader("Content-Type", "application/json");
@@ -311,6 +312,7 @@ exports.getChatUsers = function(req, res, chatId) {
  * If the chat was not found in memory, respond with 404.
  * @param {Request} req The HTTP request.
  * @param {Response} res The HTTP response.
+ * @param {string} chatId The id of the specific chat.
  */
 exports.getChatMessages = function(req, res, chatId) {
   res.setHeader("Content-Type", "application/json");
@@ -338,13 +340,16 @@ exports.getChatMessages = function(req, res, chatId) {
 /**
  * Post a message of a specific user in a specific chat, after finding the chat and the user in memory
  * and respond with the said message.
- * Finish by emitting to every websocket in the chat room that a message was just posted,
+ * Emit to every websocket in the chat room that a message was just posted,
  * along with the said message.
+ * Finish by emitting to every websocket in the chat room that a user has stopped typing,
+ * along with the said user.
  * If the HTTP request method is wrong, respond with 405.
  * If any form fields are missing, respond with 400.
  * If the chat or the user was not found in memory, respond with 404.
  * @param {Request} req The HTTP request.
  * @param {Response} res The HTTP response.
+ * @param {string} chatId The id of the specific chat.
  */
 exports.postChatMessage = async function(req, res, chatId) {
   res.setHeader("Content-Type", "application/json");
@@ -390,6 +395,53 @@ exports.postChatMessage = async function(req, res, chatId) {
 
   /** Emit to every websocket in the chat room that a message was just posted. */
   io.to(chatId).emit("chatMessage", message);
+
+  /** Emit to every websocket in the chat room that a user has stopped typing. */
+  io.to(chatId).emit("userStoppedTyping", chatUser);
+};
+
+/**
+ * After finding the specific chat and the specific user in memory, respond successfully
+ * and emit to every websocket in the chat room that a user has started typing,
+ * along with the said user.
+ * If the HTTP request method is wrong, respond with 405.
+ * If any form fields are missing, respond with 400.
+ * If the chat or the user was not found in memory, respond with 404.
+ * @param {Request} req The HTTP request.
+ * @param {Response} res The HTTP response.
+ * @param {string} chatId The id of the specific chat.
+ */
+exports.typing = async function(req, res, chatId) {
+  if (!ensureRequestMethod(req, "POST")) {
+    respondWith(res, 405);
+    return;
+  }
+
+  let fields = await parseFormFields(req);
+
+  if (!chatId || !fields.userId) {
+    respondWith(res, 400);
+    return;
+  }
+
+  let chat = findChatById(chatId);
+
+  if (!chat) {
+    respondWith(res, 404);
+    return;
+  }
+
+  let chatUser = findChatUserById(chat, fields.userId);
+
+  if (!chatUser) {
+    respondWith(res, 404);
+    return;
+  }
+
+  respondWith(res, 204);
+
+  /** Emit to every websocket in the chat room that a user has started typing. */
+  io.to(chatId).emit("userStartedTyping", chatUser);
 };
 
 /**

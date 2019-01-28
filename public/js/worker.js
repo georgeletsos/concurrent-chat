@@ -12,6 +12,14 @@ var chat;
 var chatUsers;
 
 /**
+ * List of users currently typing in memory.
+ * @property {Object[]} typingUser
+ * @property {Object} typingUser.user The user currently typing.
+ * @property {timeout} typingUser.timeout The user timeout that's going to remove the user from the list.
+ */
+var typingUsers = [];
+
+/**
  * Find a specific chat in memory.
  * @param {string} chatId The id of the specific chat.
  * @returns {Object} The specific chat.
@@ -27,6 +35,15 @@ function findChatById(chatId) {
  */
 function findChatUserIndexById(userId) {
   return chatUsers.findIndex(el => el.id === userId);
+}
+
+/**
+ * Find the index of a specific user currently typing in memory.
+ * @param {string} userId The id of the specific user.
+ * @returns {number} The index of the specific user.
+ */
+function findTypingUserIndexById(userId) {
+  return typingUsers.findIndex(el => el.user.id === userId);
 }
 
 /**
@@ -125,7 +142,7 @@ function api(method, path, data) {
 }
 
 /**
- * Register a new user using the api function.
+ * Register a new user, using the api function.
  * @param {string} [username=""] The username of the new user.
  * @returns {Promise} A promise that is resolved with the new user, or rejected with validation message(s).
  */
@@ -136,7 +153,7 @@ function registerUser(username = "") {
 }
 
 /**
- * Login a user using the api function.
+ * Login a user, using the api function.
  * @param {string} [userId=""] The id of the user.
  * @returns {Promise} A promise that is resolved or rejected with no payload.
  */
@@ -147,7 +164,7 @@ function loginUser(userId = "") {
 }
 
 /**
- * Get the list of chats using the api function.
+ * Get the list of chats, using the api function.
  * @returns {Promise} A promise that is resolved with the list of Chats.
  */
 function getChats() {
@@ -155,7 +172,7 @@ function getChats() {
 }
 
 /**
- * Get the list of users for a specific chat using the api function.
+ * Get the list of users for a specific chat, using the api function.
  * @param {string} [chatId=""] The id of the specific chat.
  * @returns {Promise} A promise that is resolved with the list of users.
  */
@@ -164,7 +181,7 @@ function getChatUsers(chatId = "") {
 }
 
 /**
- * Get the list of messages for a specific chat using the api function.
+ * Get the list of messages for a specific chat, using the api function.
  * @param {string} [chatId=""] The id of the specific chat.
  * @returns {Promise} A promise that is resolved with the list of messages.
  */
@@ -173,7 +190,7 @@ function getChatMessages(chatId = "") {
 }
 
 /**
- * Post a message of a specific user in a specific chat using the api function.
+ * Post a message of a specific user in a specific chat, using the api function.
  * @param {string} [chatId=""] The id of the specific chat.
  * @param {string} [userId=""] The id of the specific user.
  * @param {string} [messageContent=""] The message content.
@@ -183,6 +200,18 @@ function postChatMessage(chatId = "", userId = "", messageContent = "") {
   return api("post", `/api/chat/${chatId}/message`, {
     userId: userId,
     messageContent: messageContent
+  });
+}
+
+/**
+ * Send a signal that a specific user has started typing in a specific chat, using the api function.
+ * @param {string} [chatId=""] The id of the specific chat.
+ * @param {string} [userId=""] The id of the specific user.
+ * @returns {Promise} A promise that is resolved or rejected with no payload.
+ */
+function typing(chatId = "", userId = "") {
+  return api("post", `/api/chat/${chatId}/typing`, {
+    userId: userId
   });
 }
 
@@ -271,6 +300,65 @@ function connectWebsocket(chatId, userId) {
       message: message
     });
   });
+
+  /**
+   * When a user has started typing, if that user isn't the current one,
+   * add the user to the list of users currently typing, along with the user timeout (that's going to remove the user from the list).
+   * Let the main thread know a user has started typing, along with the list of users currently typing.
+   */
+  socket.on("userStartedTyping", function(user) {
+    /** Check if current user is the one who's typing. */
+    if (userId === user.id) {
+      return;
+    }
+
+    /**
+     * @property {Object} user The user currently typing.
+     * @property {timeout} timeout The user timeout that's going to remove the user from the list.
+     */
+    let typingUser = {
+      user: user,
+      timeout: setTimeout(() => {
+        let typingUserIndex = findTypingUserIndexById(user.id);
+
+        if (typingUserIndex > -1) {
+          typingUsers.splice(typingUserIndex, 1);
+
+          postMessage({
+            socketEvent: "userTyping",
+            typingUsers: typingUsers.map(el => el.user)
+          });
+        }
+      }, 10e3)
+    };
+
+    typingUsers.push(typingUser);
+
+    postMessage({
+      socketEvent: "userTyping",
+      typingUsers: typingUsers.map(el => el.user)
+    });
+  });
+
+  /**
+   * When a user has stopped typing, find the index of the user in memory and remove the user from the memory.
+   * Also clear the user timeout (that was going to remove the user from the list).
+   * Let the main thread know a user has stopped typing, along with the list of users currently typing.
+   */
+  socket.on("userStoppedTyping", function(user) {
+    let typingUserIndex = findTypingUserIndexById(user.id);
+
+    if (typingUserIndex > -1) {
+      let removedTypingUser = typingUsers.splice(typingUserIndex, 1)[0];
+
+      clearTimeout(removedTypingUser.timeout);
+
+      postMessage({
+        socketEvent: "userTyping",
+        typingUsers: typingUsers.map(el => el.user)
+      });
+    }
+  });
 }
 
 /** Listen for messages coming from the main thread. */
@@ -351,6 +439,9 @@ addEventListener("message", e => {
         resolve,
         reject
       );
+      break;
+    case "typing":
+      typing(e.data.chatId, e.data.userId).then(resolve, reject);
       break;
   }
 });

@@ -18,6 +18,11 @@ window.AppUi = (function() {
       trailing: false
     });
 
+    /** Throttle the typing function */
+    this._typingThrottled = _.throttle(this._typing, 10e3, {
+      trailing: false
+    });
+
     /** Our main DOM components are defined below. */
     this._$registerContainer = document.getElementById("register-container");
 
@@ -44,6 +49,10 @@ window.AppUi = (function() {
     this._$messageForm = document.getElementById("message-form");
 
     this._$messageFormInput = this._$messageForm.querySelector("input");
+
+    this._$typing = document.getElementById("typing");
+
+    this._$typingTextContainer = this._$typing.querySelector("span");
 
     this._$usersContainer = document.getElementById("users-container");
 
@@ -143,6 +152,12 @@ window.AppUi = (function() {
         this._$messageForm.addEventListener(
           "submit",
           this._postMessageHandler.bind(this)
+        );
+
+        /** Add the input event handler for when current user is typing in the current chat. */
+        this._$messageFormInput.addEventListener(
+          "input",
+          this._typingHandler.bind(this)
         );
 
         /**
@@ -265,6 +280,7 @@ window.AppUi = (function() {
   /**
    * Event handler that takes care of posting a message of the current user
    * in the current chat, by making an API call.
+   * After the message has been sent successfully, restart the throttled typing function.
    * @param {Event} e The event that took place.
    */
   AppUi.prototype._postMessageHandler = function(e) {
@@ -280,14 +296,118 @@ window.AppUi = (function() {
       return;
     }
 
-    AppWorker.api.postMessage({
-      action: "postChatMessage",
-      chatId: this._chatId,
-      userId: this.user.id,
-      messageContent: messageContent
-    });
+    AppWorker.api
+      .postMessage({
+        action: "postChatMessage",
+        chatId: this._chatId,
+        userId: this.user.id,
+        messageContent: messageContent
+      })
+      .then(() => {
+        /** After the message has been sent successfully, restart the throttled typing function. */
+        this._typingThrottled.cancel();
+        this._typingThrottled.flush();
+      });
 
     $message.value = "";
+  };
+
+  /** Send a signal that current user has started typing in the current chat. */
+  AppUi.prototype._typing = function() {
+    AppWorker.api.postMessage({
+      action: "typing",
+      chatId: this._chatId,
+      userId: this.user.id
+    });
+  };
+
+  /**
+   * Event handler that uses the trottled version of the typing function above,
+   * when the message being typed isn't empty.
+   * @param {Event} e The event that took place.
+   */
+  AppUi.prototype._typingHandler = function(e) {
+    e.preventDefault();
+
+    let message = e.target.value.trim();
+    if (!message) {
+      return;
+    }
+
+    this._typingThrottled(e);
+  };
+
+  /**
+   * Show the pulsing dots and draw a list of users currently typing, next to the pulsing dots.
+   * @param {Object[]} typingUsers The list of users currently typing.
+   * @param {string} typingUsers[].name The name of a user currently typing.
+   * @param {number} typingUsers[].tag The tag of a user currently typing.
+   */
+  AppUi.prototype.drawTypingUsers = function(typingUsers) {
+    /** Start by clearing the list of users currently typing of the UI. */
+    this._$typingTextContainer.innerHTML = "";
+
+    /** If there are no users currently typing, finish here by hiding the typing element of the UI. */
+    if (typingUsers.length === 0) {
+      this._$typing.classList.add("hidden");
+      return;
+    }
+
+    let $span = document.createElement("span");
+
+    $span.classList.add("text-white", "font-bold");
+
+    /** Draw something different depending on the amount of users currently typing. */
+    if (typingUsers.length === 1) {
+      let typingUser = typingUsers[0];
+
+      $span.textContent = `${typingUser.name} #${typingUser.tag}`;
+
+      this._$typingTextContainer.appendChild($span);
+
+      this._$typingTextContainer.appendChild(
+        document.createTextNode(" is typing...")
+      );
+    } else if (typingUsers.length <= 3) {
+      /** Remove the last user currently typing, but keep the user in memory temporarily (will be used later). */
+      let lastTypingUser = typingUsers.splice(-1, 1)[0];
+
+      /** Loop through the remaining users currently typing, appending each one to the element. */
+      for (let [index, typingUser] of typingUsers.entries()) {
+        let $spanClone = $span.cloneNode();
+
+        $spanClone.textContent = `${typingUser.name} #${typingUser.tag}`;
+
+        this._$typingTextContainer.appendChild($spanClone);
+
+        /** Stop here, if this is the last user of the remaining users currently typing. */
+        if (index + 1 === typingUsers.length) {
+          break;
+        }
+
+        /** Otherwise append a comma. */
+        this._$typingTextContainer.appendChild(document.createTextNode(", "));
+      }
+
+      /** Now it's time to append the last user currently typing and the typing message to the element. */
+      let $spanClone = $span.cloneNode();
+
+      $spanClone.textContent = `${lastTypingUser.name} #${lastTypingUser.tag}`;
+
+      this._$typingTextContainer.appendChild(document.createTextNode(" and "));
+
+      this._$typingTextContainer.appendChild($spanClone);
+
+      this._$typingTextContainer.appendChild(
+        document.createTextNode(" are typing...")
+      );
+    } else if (typingUsers.length > 3) {
+      this._$typingTextContainer.appendChild(
+        document.createTextNode("Several people are typing...")
+      );
+    }
+
+    this._$typing.classList.remove("hidden");
   };
 
   /**
