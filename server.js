@@ -23,6 +23,7 @@ const routes = [
   [/^\/api\/chat\/(.*)\/users$/i, handlers.getChatUsers],
   [/^\/api\/chat\/(.*)\/messages$/i, handlers.getChatMessages],
   [/^\/api\/chat\/(.*)\/message$/i, handlers.postChatMessage],
+  [/^\/api\/chat\/(.*)\/typing$/i, handlers.typing],
   [/^\/(.+)\.(js|css)$/i, handlers.staticFile],
   [/^\/(.*)$/i, handlers.index]
 ];

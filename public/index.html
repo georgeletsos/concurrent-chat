@@ -54,7 +54,7 @@
                 class="w-2 h-2 mr-1 rounded-full bg-grey-lightest animate-pulse animation-delay-1"
               ></div>
               <div
-                class="w-2 h-2 mr-1 rounded-full bg-grey-lightest animate-pulse animation-delay-2"
+                class="w-2 h-2 rounded-full bg-grey-lightest animate-pulse animation-delay-2"
               ></div>
             </div>
           </button>
@@ -105,13 +105,27 @@
 
           <form
             id="message-form"
-            class="p-6 bg-grey-darker border-t border-solid border-grey-dark"
+            class="px-6 relative bg-grey-darker border-t border-solid border-grey-dark"
           >
             <input
               type="text"
-              class="p-3 text-base text-grey-lightest bg-grey-light rounded-lg w-full focus:outline-none"
+              class="p-3 mt-6 mb-8 text-base text-grey-lightest bg-grey-light rounded-lg w-full focus:outline-none"
               autofocus
             />
+            <div id="typing" class="py-2 absolute pin-b hidden">
+              <div class="inline-flex">
+                <div
+                  class="w-2 h-2 mr-1 rounded-full bg-grey-lightest animate-pulse"
+                ></div>
+                <div
+                  class="w-2 h-2 mr-1 rounded-full bg-grey-lightest animate-pulse animation-delay-1"
+                ></div>
+                <div
+                  class="w-2 h-2 rounded-full bg-grey-lightest animate-pulse animation-delay-2"
+                ></div>
+              </div>
+              <span class="text-sm text-grey-lightest"></span>
+            </div>
           </form>
         </div>
 

@@ -109,6 +109,11 @@ window.AppWorker = (function() {
           case "chatMessage":
             AppUi.drawMessages([e.data.message]);
             break;
+
+          /** When a user has started/stopped typing, draw the users currently typing in the UI. */
+          case "userTyping":
+            AppUi.drawTypingUsers(e.data.typingUsers);
+            break;
         }
 
         return;
