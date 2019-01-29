@@ -196,6 +196,29 @@ window.AppUi = (function() {
   };
 
   /**
+   * @param {Element} $element The element in question.
+   * @returns {number} The sum of `scrollTop` and `clientHeight` properties of the `$element`.
+   */
+  AppUi.prototype._getElementScrollClient = function($element) {
+    return Math.ceil($element.scrollTop + $element.clientHeight);
+  };
+
+  /**
+   * Check if the user is currently scrolling on an element, by using the `scrollClient` and `scrollHeight` properties of the element.
+   * Doesn't always use the current values of the above properties of the element, in case something has been added to the element in between.
+   * @param {number} scrollClient The scrollClient property of the element.
+   * @param {number} scrollHeight The scrollHeight property of the element.
+   * @returns {Boolean} True or false.
+   */
+  AppUi.prototype._isUserCurrentlyScrolling = function(
+    scrollClient,
+    scrollHeight
+  ) {
+    /** Deviation of 5px */
+    return Math.abs(scrollClient - scrollHeight) > 5;
+  };
+
+  /**
    * Register a new user by making an API call.
    * If successful, save the new user to local storage and show the app UI.
    * If not successful, show validation error(s).
@@ -280,7 +303,8 @@ window.AppUi = (function() {
   /**
    * Event handler that takes care of posting a message of the current user
    * in the current chat, by making an API call.
-   * After the message has been sent successfully, restart the throttled typing function.
+   * After the message has been sent successfully, scroll to bottom of the messages DOM component.
+   * Also restart the throttled typing function.
    * @param {Event} e The event that took place.
    */
   AppUi.prototype._postMessageHandler = function(e) {
@@ -304,7 +328,10 @@ window.AppUi = (function() {
         messageContent: messageContent
       })
       .then(() => {
-        /** After the message has been sent successfully, restart the throttled typing function. */
+        /** After the message has been sent successfully, scroll to bottom of the messages DOM component. */
+        this._$messages.scrollTop = this._$messages.scrollHeight;
+
+        /** Also restart the throttled typing function. */
         this._typingThrottled.cancel();
         this._typingThrottled.flush();
       });
@@ -524,6 +551,13 @@ window.AppUi = (function() {
    * @param {string} user.tag The tag of the user.
    */
   AppUi.prototype.drawWelcomeMessage = function(user) {
+    /**
+     * Store the scroll and height of the messages DOM component before continuing.
+     * They are going to be used later to implement scroll to bottom functionality.
+     */
+    let messagesScrollClient = this._getElementScrollClient(this._$messages),
+      messagesScrollHeight = this._$messages.scrollHeight;
+
     let $li = document.createElement("li"),
       $arrow = document.createElement("div"),
       $welcomeMessage = document.createElement("div"),
@@ -572,6 +606,16 @@ window.AppUi = (function() {
     $li.appendChild($time);
 
     this._$messages.appendChild($li);
+
+    /** If the user is not currently scrolling, scroll to bottom of the messages DOM component to show the newly added message. */
+    if (
+      !this._isUserCurrentlyScrolling(
+        messagesScrollClient,
+        messagesScrollHeight
+      )
+    ) {
+      this._$messages.scrollTop = this._$messages.scrollHeight;
+    }
   };
 
   /**
@@ -581,6 +625,13 @@ window.AppUi = (function() {
    * @param {string} user.tag The tag of the user.
    */
   AppUi.prototype.drawGoodbyeMessage = function(user) {
+    /**
+     * Store the scroll and height of the messages DOM component before continuing.
+     * They are going to be used later to implement scroll to bottom functionality.
+     */
+    let messagesScrollClient = this._getElementScrollClient(this._$messages),
+      messagesScrollHeight = this._$messages.scrollHeight;
+
     let $li = document.createElement("li"),
       $arrow = document.createElement("div"),
       $welcomeMessage = document.createElement("div"),
@@ -630,6 +681,16 @@ window.AppUi = (function() {
     $li.appendChild($time);
 
     this._$messages.appendChild($li);
+
+    /** If the user is not currently scrolling, scroll to bottom of the messages DOM component to show the newly added message. */
+    if (
+      !this._isUserCurrentlyScrolling(
+        messagesScrollClient,
+        messagesScrollHeight
+      )
+    ) {
+      this._$messages.scrollTop = this._$messages.scrollHeight;
+    }
   };
 
   /**
@@ -644,10 +705,8 @@ window.AppUi = (function() {
      * Store the scroll and height of the messages DOM component before continuing.
      * They are going to be used later to implement scroll to bottom functionality.
      */
-    let $messagesScrollClient = Math.ceil(
-        this._$messages.scrollTop + this._$messages.clientHeight
-      ),
-      $messagesScrollHeight = this._$messages.scrollHeight;
+    let messagesScrollClient = this._getElementScrollClient(this._$messages),
+      messagesScrollHeight = this._$messages.scrollHeight;
 
     for (let message of messages) {
       let user = message.user,
@@ -707,9 +766,13 @@ window.AppUi = (function() {
       this._$messages.appendChild($li);
     }
 
-    /** If the user is not currently scrolling... (deviation of 5px) */
-    if (Math.abs($messagesScrollClient - $messagesScrollHeight) <= 5) {
-      /** Scroll to bottom to show the newly added messages. */
+    /** If the user is not currently scrolling, scroll to bottom of the messages DOM component to show the newly added messages. */
+    if (
+      !this._isUserCurrentlyScrolling(
+        messagesScrollClient,
+        messagesScrollHeight
+      )
+    ) {
       this._$messages.scrollTop = this._$messages.scrollHeight;
     }
   };
