@@ -73,6 +73,10 @@
   background-color: var(--purple);
 }
 
+.border-purple {
+  border-color: var(--purple);
+}
+
 .focus\:border-purple:focus {
   border-color: var(--purple);
 }
@@ -87,6 +91,10 @@
 
 .transition-border {
   transition: border 0.15s ease;
+}
+
+.rotate-180 {
+  transform: rotate(180deg);
 }
 
 .hidden {
@@ -186,4 +194,10 @@ body {
 
 .animation-delay-2 {
   animation-delay: 0.4s;
+}
+
+/* SVG */
+
+.arrow-right {
+  background-image: url("/img/arrow-right.svg");
 }

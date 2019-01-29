@@ -57,7 +57,7 @@ function parseFormFields(req) {
  * Serve static files by creating a stream to read the `file`,
  * and piping the `file` to the HTTP `res`.
  * @param {Response} res The HTTP response.
- * @param {File} file The file to serve.
+ * @param {string} file The path of the file to serve.
  */
 function serveFile(res, file) {
   let stream = fs.createReadStream(file);
@@ -445,12 +445,22 @@ exports.typing = async function(req, res, chatId) {
 };
 
 /**
- * Serve the requested path as a static file.
+ * Serve the requested path as a static file, after setting a response header for the appropriate content type.
  * @param {Request} req The HTTP request.
  * @param {Response} res The HTTP response.
  */
 exports.staticFile = function(req, res) {
-  serveFile(res, path.join(`${__dirname}/public`, req.url));
+  let file = path.join(`${__dirname}/public`, req.url),
+    fileExtension = path.extname(file),
+    mimeTypes = {
+      ".js": "application/javascript",
+      ".css": "text/css",
+      ".svg": "image/svg+xml"
+    };
+
+  res.setHeader("Content-Type", mimeTypes[fileExtension]);
+
+  serveFile(res, file);
 };
 
 /**
@@ -459,9 +469,11 @@ exports.staticFile = function(req, res) {
  * @param {Response} res The HTTP response.
  */
 exports.index = function(req, res) {
-  res.setHeader("ContentType", "text/html");
+  let file = path.join(`${__dirname}/public`, "index.html");
 
-  serveFile(res, path.join(`${__dirname}/public`, "index.html"));
+  res.setHeader("Content-Type", "text/html");
+
+  serveFile(res, file);
 };
 
 /**

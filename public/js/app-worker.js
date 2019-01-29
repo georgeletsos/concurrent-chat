@@ -90,7 +90,7 @@ window.AppWorker = (function() {
             AppUi.setMessagePlaceholder(e.data.chatName);
             break;
 
-          /** When a user connects, draw the user in the UI. */
+          /** When a user connects, draw the user in the UI, along with a welcome message. */
           case "userConnected":
             if (e.data.nextUser) {
               AppUi.drawUserAfter(e.data.user, e.data.nextUser);
@@ -98,11 +98,14 @@ window.AppWorker = (function() {
               AppUi.drawUsers([e.data.user]);
             }
 
+            AppUi.drawWelcomeMessage(e.data.user);
             break;
 
-          /** When a user disconnects, remove the user from the UI. */
+          /** When a user disconnects, remove the user from the UI and draw a goodbye message. */
           case "userDisconnected":
             AppUi.undrawUser(e.data.user);
+
+            AppUi.drawGoodbyeMessage(e.data.user);
             break;
 
           /** When a message is received, draw the message in the UI. */
