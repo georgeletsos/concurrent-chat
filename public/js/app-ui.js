@@ -518,6 +518,121 @@ window.AppUi = (function() {
   };
 
   /**
+   * Draw a welcome message for the `user` on the UI.
+   * @param {Object} user The user to say welcome to.
+   * @param {string} user.name The name of the user.
+   * @param {string} user.tag The tag of the user.
+   */
+  AppUi.prototype.drawWelcomeMessage = function(user) {
+    let $li = document.createElement("li"),
+      $arrow = document.createElement("div"),
+      $welcomeMessage = document.createElement("div"),
+      $username = document.createElement("span"),
+      $time = document.createElement("span");
+
+    $li.classList.add(
+      "py-2",
+      "border-t",
+      "border-solid",
+      "border-grey-dark",
+      "flex",
+      "items-center"
+    );
+
+    $arrow.classList.add(
+      "w-4",
+      "h-4",
+      "mr-2",
+      "bg-contain",
+      "bg-center",
+      "bg-no-repeat",
+      "arrow-right"
+    );
+
+    $li.appendChild($arrow);
+
+    $welcomeMessage.classList.add("text-base", "text-grey-lightest");
+
+    $welcomeMessage.appendChild(document.createTextNode("Welcome "));
+
+    $username.classList.add("text-white");
+
+    $username.textContent = `${user.name} #${user.tag}`;
+
+    $welcomeMessage.appendChild($username);
+
+    $welcomeMessage.appendChild(document.createTextNode("."));
+
+    $li.appendChild($welcomeMessage);
+
+    $time.classList.add("ml-1", "text-sm", "text-grey-dark");
+
+    $time.textContent = `Today at ${dayjs().format("h:mm A")}`;
+
+    $li.appendChild($time);
+
+    this._$messages.appendChild($li);
+  };
+
+  /**
+   * Draw a goodbye message for the `user` on the UI.
+   * @param {Object} user The user to say goodbye to.
+   * @param {string} user.name The name of the user.
+   * @param {string} user.tag The tag of the user.
+   */
+  AppUi.prototype.drawGoodbyeMessage = function(user) {
+    let $li = document.createElement("li"),
+      $arrow = document.createElement("div"),
+      $welcomeMessage = document.createElement("div"),
+      $username = document.createElement("span"),
+      $time = document.createElement("span");
+
+    $li.classList.add(
+      "py-2",
+      "border-t",
+      "border-solid",
+      "border-grey-dark",
+      "flex",
+      "items-center"
+    );
+
+    $arrow.classList.add(
+      "w-4",
+      "h-4",
+      "mr-2",
+      "bg-contain",
+      "bg-center",
+      "bg-no-repeat",
+      "arrow-right",
+      "rotate-180"
+    );
+
+    $li.appendChild($arrow);
+
+    $welcomeMessage.classList.add("text-base", "text-grey-lightest");
+
+    $welcomeMessage.appendChild(document.createTextNode("Goodbye "));
+
+    $username.classList.add("text-white");
+
+    $username.textContent = `${user.name} #${user.tag}`;
+
+    $welcomeMessage.appendChild($username);
+
+    $welcomeMessage.appendChild(document.createTextNode("."));
+
+    $li.appendChild($welcomeMessage);
+
+    $time.classList.add("ml-1", "text-sm", "text-grey-dark");
+
+    $time.textContent = `Today at ${dayjs().format("h:mm A")}`;
+
+    $li.appendChild($time);
+
+    this._$messages.appendChild($li);
+  };
+
+  /**
    * Draw a list of `messages` on the UI.
    * @param {Object[]} messages A list of messages.
    * @param {string} messages[].user The user that sent the message.
