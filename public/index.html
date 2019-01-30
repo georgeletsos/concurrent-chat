@@ -104,14 +104,15 @@
           ></ul>
 
           <form
-            id="message-form"
-            class="px-6 relative bg-grey-darker border-t border-solid border-grey-dark"
+            class="px-6 pt-6 pb-8 relative bg-grey-darker border-t border-solid border-grey-dark"
           >
-            <input
+            <textarea
+              id="message-form-field"
               type="text"
-              class="p-3 mt-6 mb-8 text-base text-grey-lightest bg-grey-light rounded-lg w-full focus:outline-none"
+              class="p-3 text-base text-grey-lightest bg-grey-light rounded-lg w-full focus:outline-none resize-none"
+              rows="1"
               autofocus
-            />
+            ></textarea>
             <div id="typing" class="py-2 absolute pin-b hidden">
               <div class="inline-flex">
                 <div
