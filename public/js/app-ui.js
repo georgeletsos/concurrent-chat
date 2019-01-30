@@ -13,20 +13,23 @@ window.AppUi = (function() {
     /** Current chat id that comes from the page URL. */
     this._chatId = location.pathname.slice(1);
 
-    /** Throttle the register user function */
+    /** Throttle the register user function. */
     this._registerUserThrottled = _.throttle(this._registerUser, 1e3, {
       trailing: false
     });
 
-    /** Throttle the typing function */
+    /** Add the submission event handler for the register user UI form. */
+    document
+      .getElementById("register-form")
+      .addEventListener("submit", this._registerUserHandler.bind(this));
+
+    /** Throttle the typing function. */
     this._typingThrottled = _.throttle(this._typing, 10e3, {
       trailing: false
     });
 
     /** Our main DOM components are defined below. */
-    this._$registerContainer = document.getElementById("register-container");
-
-    this._$registerForm = document.getElementById("register-form");
+    this.$registerContainer = document.getElementById("register-container");
 
     this._$appContainer = document.getElementById("app-container");
 
@@ -46,9 +49,7 @@ window.AppUi = (function() {
 
     this._$messages = document.getElementById("messages");
 
-    this._$messageForm = document.getElementById("message-form");
-
-    this._$messageFormInput = this._$messageForm.querySelector("input");
+    this._$messageFormField = document.getElementById("message-form-field");
 
     this._$typing = document.getElementById("typing");
 
@@ -57,18 +58,6 @@ window.AppUi = (function() {
     this._$usersContainer = document.getElementById("users-container");
 
     this._$users = document.getElementById("users");
-  };
-
-  /** Initialize the register user UI, by showing the DOM component and adding event handlers. */
-  AppUi.prototype.initRegister = function() {
-    /** Add the submission event handler for the register user UI form. */
-    this._$registerForm.addEventListener(
-      "submit",
-      this._registerUserHandler.bind(this)
-    );
-
-    /** Show the register user UI. */
-    this._$registerContainer.classList.remove("hidden");
   };
 
   /** Initialize the app UI, by showing the DOM component, adding event handlers and making API calls. */
@@ -86,14 +75,14 @@ window.AppUi = (function() {
       /** Set the current user as empty. */
       this.user = null;
 
-      /** Finish here by initializing the register user UI. */
-      this.initRegister();
+      /** Finish here by showing the register user UI. */
+      this.$registerContainer.classList.remove("hidden");
 
       return;
     }
 
     /** After successfully logging in, remove the container of the register user UI. */
-    this._$registerContainer.parentNode.removeChild(this._$registerContainer);
+    this.$registerContainer.parentNode.removeChild(this.$registerContainer);
 
     /** Show the app UI. */
     this._$appContainer.classList.remove("hidden");
@@ -115,6 +104,12 @@ window.AppUi = (function() {
 
     /** If there's no chat id in the page URL... */
     if (!this._chatId) {
+      /** Remove the container of messages. */
+      this._$messagesContainer.parentNode.removeChild(this._$messagesContainer);
+
+      /** Remove the container of users. */
+      this._$usersContainer.parentNode.removeChild(this._$usersContainer);
+
       /** Finish here by showing the container of instructions. */
       this._$instructionsContainer.classList.remove("hidden");
 
@@ -148,24 +143,36 @@ window.AppUi = (function() {
          */
         this._$messagesContainer.classList.remove("hidden");
 
-        /** Add the submission event handler for posting a message in the current chat. */
-        this._$messageForm.addEventListener(
-          "submit",
-          this._postMessageHandler.bind(this)
-        );
+        /** Add the event handler for posting a message in the current chat. */
+        this._$messageFormField.addEventListener("keydown", e => {
+          /** Since this is a textarea, post the message only after the Enter key has been pressed. */
+          if (e.key === "Enter" && !e.shiftKey) {
+            this._postMessageHandler(e);
+          }
+        });
 
         /** Add the input event handler for when current user is typing in the current chat. */
-        this._$messageFormInput.addEventListener(
-          "input",
-          this._typingHandler.bind(this)
-        );
+        this._$messageFormField.addEventListener("input", e => {
+          /** Since this is a textarea... */
+          let $el = e.target;
+
+          /** Reset its height. */
+          $el.style.height = "auto";
+
+          /** Grow the textarea, when a new line is added. */
+          if ($el.scrollHeight > $el.clientHeight) {
+            $el.style.height = $el.scrollHeight + "px";
+          }
+
+          this._typingHandler(e);
+        });
 
         /**
          * Focus on the message input.
          * (When the code reaches here right after registering a new User,
          * we need to redirect the focus.)
          */
-        this._$messageFormInput.focus();
+        this._$messageFormField.focus();
 
         /** Finally draw the list of messages on the UI. */
         this.drawMessages(messages);
@@ -192,7 +199,7 @@ window.AppUi = (function() {
    * @param {string} chatName
    */
   AppUi.prototype.setMessagePlaceholder = function(chatName) {
-    this._$messageFormInput.setAttribute("placeholder", `Message #${chatName}`);
+    this._$messageFormField.setAttribute("placeholder", `Message #${chatName}`);
   };
 
   /**
@@ -310,9 +317,7 @@ window.AppUi = (function() {
   AppUi.prototype._postMessageHandler = function(e) {
     e.preventDefault();
 
-    let $form = e.target;
-
-    let $message = $form.querySelector("input");
+    let $message = e.target;
 
     let messageContent = $message.value.trim();
 
@@ -336,7 +341,11 @@ window.AppUi = (function() {
         this._typingThrottled.flush();
       });
 
+    /** Clear the message field. */
     $message.value = "";
+
+    /** Since this is a textarea, also reset its height. */
+    $message.style.height = "auto";
   };
 
   /** Send a signal that current user has started typing in the current chat. */
@@ -361,7 +370,7 @@ window.AppUi = (function() {
       return;
     }
 
-    this._typingThrottled(e);
+    this._typingThrottled();
   };
 
   /**
@@ -755,7 +764,13 @@ window.AppUi = (function() {
 
       $div1.appendChild($div2);
 
-      $message.classList.add("text-base", "text-grey-lightest", "message");
+      $message.classList.add(
+        "text-base",
+        "text-grey-lightest",
+        "message",
+        "whitespace-pre-wrap",
+        "break-words"
+      );
 
       $message.textContent = message.content;
 

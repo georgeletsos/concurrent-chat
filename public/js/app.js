@@ -17,8 +17,8 @@ const onDocumentReady = function(eventHandler) {
 onDocumentReady(function() {
   /** If there's no user found in local storage... */
   if (!AppUi.user) {
-    /** Finish here by initializing the register user UI. */
-    AppUi.initRegister();
+    /** Finish here by showing the register user UI. */
+    AppUi.$registerContainer.classList.remove("hidden");
 
     return;
   }
