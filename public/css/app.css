@@ -119,29 +119,21 @@ textarea {
 
 /* Scrollbar */
 
-::-webkit-scrollbar {
+#chats::-webkit-scrollbar,
+#messages::-webkit-scrollbar,
+#users::-webkit-scrollbar,
+#message-form-field::-webkit-scrollbar {
   width: 12px;
-}
-
-::-webkit-scrollbar-track {
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb {
-  border-radius: 10px;
-  background-color: var(--black);
 }
 
 #chats::-webkit-scrollbar-track,
 #messages::-webkit-scrollbar-track,
-#users::-webkit-scrollbar-track {
+#users::-webkit-scrollbar-track,
+#message-form-field::-webkit-scrollbar-track {
+  border-radius: 10px;
   border: 3px solid;
-  margin: 5px;
-}
-
-#chats::-webkit-scrollbar-track,
-#users::-webkit-scrollbar-track {
   border-color: var(--grey-darkest);
+  margin: 5px;
 }
 
 #messages::-webkit-scrollbar-track {
@@ -149,19 +141,26 @@ textarea {
   border-color: var(--grey-darker);
 }
 
-#chats::-webkit-scrollbar-thumb,
-#messages::-webkit-scrollbar-thumb,
-#users::-webkit-scrollbar-thumb {
-  border: 3px solid;
+#message-form-field::-webkit-scrollbar-track {
+  border-color: var(--grey-light);
 }
 
 #chats::-webkit-scrollbar-thumb,
-#users::-webkit-scrollbar-thumb {
+#messages::-webkit-scrollbar-thumb,
+#users::-webkit-scrollbar-thumb,
+#message-form-field::-webkit-scrollbar-thumb {
+  background-color: var(--black);
+  border-radius: 10px;
+  border: 3px solid;
   border-color: var(--grey-darkest);
 }
 
 #messages::-webkit-scrollbar-thumb {
   border-color: var(--grey-darker);
+}
+
+#message-form-field::-webkit-scrollbar-thumb {
+  border-color: var(--grey-light);
 }
 
 /* Register */
