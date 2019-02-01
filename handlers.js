@@ -340,7 +340,7 @@ exports.getChatMessages = function(req, res, chatId) {
 /**
  * Post a message of a specific user in a specific chat, after finding the chat and the user in memory
  * and respond with the said message.
- * Emit to every websocket in the chat room that a message was just posted,
+ * Emit to every websocket in the chat room that a message has just been posted,
  * along with the said message.
  * Finish by emitting to every websocket in the chat room that a user has stopped typing,
  * along with the said user.
@@ -393,7 +393,7 @@ exports.postChatMessage = async function(req, res, chatId) {
 
   respondWith(res, 200, message);
 
-  /** Emit to every websocket in the chat room that a message was just posted. */
+  /** Emit to every websocket in the chat room that a message has just been posted. */
   io.to(chatId).emit("chatMessage", message);
 
   /** Emit to every websocket in the chat room that a user has stopped typing. */
@@ -442,6 +442,56 @@ exports.typing = async function(req, res, chatId) {
 
   /** Emit to every websocket in the chat room that a user has started typing. */
   io.to(chatId).emit("userStartedTyping", chatUser);
+};
+
+/**
+ * Create a new chat with a specific user as the owner, after finding the user in memory
+ * and respond with the said chat.
+ * Finish by emitting to every websocket that a new chat has just been created, along with the said chat.
+ * If the HTTP request method is wrong, respond with 405.
+ * If any form fields are missing, respond with 400.
+ * If the user was not found in memory, respond with 404.
+ * @param {Request} req The HTTP request.
+ * @param {Response} res The HTTP response.
+ * @param {string} chatId The id of the specific chat.
+ */
+exports.createChat = async function(req, res) {
+  res.setHeader("Content-Type", "application/json");
+
+  if (!ensureRequestMethod(req, "POST")) {
+    respondWith(res, 405);
+    return;
+  }
+
+  let fields = await parseFormFields(req);
+
+  if (!fields.userId || !fields.chatName) {
+    respondWith(res, 400);
+    return;
+  }
+
+  let user = findUserById(fields.userId);
+
+  if (!user) {
+    respondWith(res, 404);
+    return;
+  }
+
+  let chat = {
+    id: generateUuid(),
+    name: fields.chatName,
+    owner: user,
+    users: [],
+    messages: [],
+    createdAt: new Date().getTime()
+  };
+
+  chats.push(chat);
+
+  respondWith(res, 200, chat);
+
+  /** Emit to every websocket that a new chat has been created. */
+  io.emit("chatCreated", chat);
 };
 
 /**

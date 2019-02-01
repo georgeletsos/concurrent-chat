@@ -41,6 +41,10 @@ window.AppUi = (function() {
 
     this._$myTag = document.getElementById("my-tag");
 
+    this._$showCreateChatBtn = document.getElementById("show-chat-btn");
+
+    this._$createChatForm = document.getElementById("chat-form");
+
     this._$instructionsContainer = document.getElementById(
       "instructions-container"
     );
@@ -89,6 +93,18 @@ window.AppUi = (function() {
 
     this._drawCurrentUserInfo(this.user);
 
+    /** Add the event handler for showing the create chat UI. */
+    this._$showCreateChatBtn.addEventListener(
+      "click",
+      this._showCreateChatHandler.bind(this)
+    );
+
+    /** Add the event handler for creating a new chat. */
+    this._$createChatForm.addEventListener(
+      "submit",
+      this._createChatHandler.bind(this)
+    );
+
     /** Make an async API call to get the list of chats... */
     AppWorker.api
       .postMessage({
@@ -96,7 +112,7 @@ window.AppUi = (function() {
       })
       .then(chats => {
         /** Then draw the list of chats on the UI. */
-        this._drawChats(chats);
+        this.drawChats(chats);
 
         /** And show the container of the list of chats. */
         this._$chatsContainer.classList.remove("hidden");
@@ -308,6 +324,57 @@ window.AppUi = (function() {
   };
 
   /**
+   * Event handler that shows the create chat UI.
+   * @param {Event} e The event that took place.
+   */
+  AppUi.prototype._showCreateChatHandler = function(e) {
+    e.preventDefault();
+
+    /** Show the create chat UI. */
+    this._$createChatForm.classList.toggle("hidden");
+
+    /** And focus on its field. */
+    this._$createChatForm.querySelector("input").focus();
+
+    let $childEl = this._$showCreateChatBtn.querySelector("div");
+
+    $childEl.classList.toggle("rotate-45");
+  };
+
+  /**
+   * Event handler that takes care of creating a new chat with the current user as the owner, by making an API call.
+   * After the new chat has been successfully created, redirect to the new chat.
+   * @param {Event} e The event that took place.
+   */
+  AppUi.prototype._createChatHandler = function(e) {
+    e.preventDefault();
+
+    let $form = e.target;
+
+    let $chatNameField = $form.querySelector("input");
+
+    let chatName = $chatNameField.value.trim();
+
+    if (!chatName) {
+      return;
+    }
+
+    AppWorker.api
+      .postMessage({
+        action: "createChat",
+        userId: this.user.id,
+        chatName: chatName
+      })
+      .then(newChat => {
+        /** After the new chat has been successfully created, redirect to the new chat. */
+        location.href = `/${newChat.id}`;
+      });
+
+    /** Clear the chat name field. */
+    $chatNameField.value = "";
+  };
+
+  /**
    * Event handler that takes care of posting a message of the current user
    * in the current chat, by making an API call.
    * After the message has been sent successfully, scroll to bottom of the messages DOM component.
@@ -507,7 +574,7 @@ window.AppUi = (function() {
    * @param {string} chats[].id The id of the chat.
    * @param {string} chats[].name The name of the chat.
    */
-  AppUi.prototype._drawChats = function(chats) {
+  AppUi.prototype.drawChats = function(chats) {
     for (let chat of chats) {
       let $li = document.createElement("li"),
         $div = document.createElement("div"),
@@ -744,7 +811,7 @@ window.AppUi = (function() {
 
       $div2.appendChild($username);
 
-      $time.classList.add("ml-1", "text-sm", "text-grey-dark", "time");
+      $time.classList.add("ml-1", "text-sm", "text-grey-dark");
 
       let today = dayjs(),
         yesterday = today.subtract(1, "day"),
