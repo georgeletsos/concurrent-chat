@@ -108,6 +108,11 @@ window.AppWorker = (function() {
             AppUi.drawGoodbyeMessage(e.data.user);
             break;
 
+          /** When a new chat has been created, draw the new chat in the UI. */
+          case "chatCreated":
+            AppUi.drawChats([e.data.chat]);
+            break;
+
           /** When a message is received, draw the message in the UI. */
           case "chatMessage":
             AppUi.drawMessages([e.data.message]);

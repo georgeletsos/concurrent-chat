@@ -18,43 +18,40 @@
   </head>
 
   <body>
-    <div class="container mx-auto h-screen">
+    <div class="mx-auto h-screen container">
       <!-- Register -->
       <div
         id="register-container"
-        class="flex justify-center items-center h-full hidden"
+        class="h-full flex justify-center items-center hidden"
       >
-        <form
-          id="register-form"
-          class="bg-grey-darker shadow-md rounded px-8 py-8"
-        >
+        <form id="register-form" class="p-8 bg-grey-darker rounded shadow-md">
           <div class="mb-4">
             <label
-              class="block text-sm text-grey-lighter font-bold mb-2"
+              class="mb-2 block text-sm text-grey-lighter font-bold"
               for="username"
             >
               Username
             </label>
             <input
-              class="py-2 px-3 text-base text-grey-lightest bg-grey-darkest border border-grey-dark rounded w-full leading-tight hover:border-black focus:border-purple focus:outline-none transition-border"
+              class="py-2 px-3 text-base text-grey-lightest bg-grey-darkest border border-solid border-grey-dark rounded w-full leading-tight hover:border-black focus:border-purple focus:outline-none transition-border-1"
               type="text"
               autofocus
             />
           </div>
           <button
-            class="py-2 px-4 bg-purple text-base text-white rounded w-full hover:bg-purple-dark focus:outline-none active:bg-purple-darker"
+            class="py-2 px-4 w-full bg-purple text-base text-white rounded hover:bg-purple-dark focus:outline-none active:bg-purple-darker"
             type="submit"
           >
             <span>Join</span>
             <div class="inline-flex hidden">
               <div
-                class="w-2 h-2 mr-1 rounded-full bg-grey-lightest animate-pulse"
+                class="w-2 h-2 mr-1 bg-grey-lightest rounded-full animate-pulse"
               ></div>
               <div
-                class="w-2 h-2 mr-1 rounded-full bg-grey-lightest animate-pulse animation-delay-1"
+                class="w-2 h-2 mr-1 bg-grey-lightest rounded-full animate-pulse animation-delay-1"
               ></div>
               <div
-                class="w-2 h-2 rounded-full bg-grey-lightest animate-pulse animation-delay-2"
+                class="w-2 h-2 bg-grey-lightest rounded-full animate-pulse animation-delay-2"
               ></div>
             </div>
           </button>
@@ -62,24 +59,51 @@
       </div>
 
       <!-- Chat UI -->
-      <div id="app-container" class="flex h-full rounded-lg shadow-md hidden">
+      <div id="app-container" class="h-full flex rounded-lg shadow-md hidden">
         <!-- Chats list -->
         <div
           id="chats-container"
-          class="w-1/5 bg-grey-darkest rounded-l-lg flex flex-col hidden"
+          class="w-1/5 bg-grey-darkest flex flex-col rounded-l-lg hidden"
         >
-          <ul id="chats" class="list-reset px-2 py-1 h-full overflow-auto"></ul>
+          <ul
+            id="chats"
+            class="px-2 py-1 h-full flex-basis-0 flex-grow list-reset overflow-auto"
+          ></ul>
 
-          <div class="px-4 py-2 bg-black rounded-bl-lg">
-            <div id="my-username" class="mb-1 text-base text-white"></div>
-            <div id="my-tag" class="text-sm text-white opacity-50"></div>
+          <form
+            id="chat-form"
+            class="p-2 border-t border-solid border-grey-dark animate-scale-up-bl hidden"
+          >
+            <input
+              class="py-2 px-3 w-full bg-black text-base text-grey-lightest border border-solid border-grey-dark rounded leading-tight hover:border-black focus:border-purple focus:outline-none transition-border-1"
+              type="text"
+              placeholder="Chat name"
+            />
+          </form>
+
+          <div
+            class="px-4 py-2 bg-black flex justify-between items-center rounded-bl-lg"
+          >
+            <div>
+              <div id="my-username" class="mb-1 text-base text-white"></div>
+              <div id="my-tag" class="text-sm text-white opacity-50"></div>
+            </div>
+
+            <button
+              id="show-chat-btn"
+              class="p-2 hover:bg-grey-darker focus:outline-none"
+            >
+              <div
+                class="w-6 h-6 bg-contain plus-sign transition-transform-1"
+              ></div>
+            </button>
           </div>
         </div>
 
         <!-- Instructions -->
         <div
           id="instructions-container"
-          class="w-4/5 bg-grey-darker rounded-r-lg flex items-center justify-center hidden"
+          class="w-4/5 bg-grey-darker flex items-center justify-center rounded-r-lg hidden"
         >
           <ul class="list-reset">
             <li class="py-4 text-lg text-grey-lighter">
@@ -88,7 +112,7 @@
             </li>
             <li class="py-4 text-lg text-grey-lighter">
               2. Create a new chat by clicking the button on the bottom of the
-              list to the left. (todo)
+              list to the left.
             </li>
           </ul>
         </div>
@@ -100,7 +124,7 @@
         >
           <ul
             id="messages"
-            class="list-reset px-6 pt-2 h-full overflow-auto"
+            class="px-6 pt-2 h-full list-reset overflow-auto"
           ></ul>
 
           <form
@@ -109,20 +133,20 @@
             <textarea
               id="message-form-field"
               type="text"
-              class="p-3 text-base text-grey-lightest bg-grey-light rounded-lg w-full focus:outline-none resize-none"
+              class="p-3 w-full text-base text-grey-lightest bg-grey-light rounded-lg focus:outline-none resize-none"
               rows="1"
               autofocus
             ></textarea>
             <div id="typing" class="py-2 absolute pin-b hidden">
               <div class="inline-flex">
                 <div
-                  class="w-2 h-2 mr-1 rounded-full bg-grey-lightest animate-pulse"
+                  class="w-2 h-2 mr-1 bg-grey-lightest rounded-full animate-pulse"
                 ></div>
                 <div
-                  class="w-2 h-2 mr-1 rounded-full bg-grey-lightest animate-pulse animation-delay-1"
+                  class="w-2 h-2 mr-1 bg-grey-lightest rounded-full animate-pulse animation-delay-1"
                 ></div>
                 <div
-                  class="w-2 h-2 rounded-full bg-grey-lightest animate-pulse animation-delay-2"
+                  class="w-2 h-2 bg-grey-lightest rounded-full animate-pulse animation-delay-2"
                 ></div>
               </div>
               <span class="text-sm text-grey-lightest"></span>
@@ -135,7 +159,7 @@
           id="users-container"
           class="w-1/5 bg-grey-darkest rounded-r-lg hidden"
         >
-          <ul id="users" class="list-reset px-8 pt-2 h-full overflow-auto"></ul>
+          <ul id="users" class="px-8 pt-2 h-full list-reset overflow-auto"></ul>
         </div>
       </div>
     </div>

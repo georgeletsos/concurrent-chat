@@ -172,6 +172,19 @@ function getChats() {
 }
 
 /**
+ * Create a new chat with a specific user as the owner, using the api function.
+ * @param {string} [userId=""] The id of the specific user.
+ * @param {string} [chatName=""] The name of the chat.
+ * @returns {Promise} A promise that is resolved with the new chat.
+ */
+function createChat(userId = "", chatName = "") {
+  return api("post", `/api/chat/create`, {
+    userId: userId,
+    chatName: chatName
+  });
+}
+
+/**
  * Get the list of users for a specific chat, using the api function.
  * @param {string} [chatId=""] The id of the specific chat.
  * @returns {Promise} A promise that is resolved with the list of users.
@@ -287,6 +300,20 @@ function connectWebsocket(chatId, userId) {
     postMessage({
       socketEvent: "userDisconnected",
       user: user
+    });
+  });
+
+  /**
+   * When a new chat has been created, add the new chat to the list of chats in memory
+   * and let the main thread know that a new chat has just been created,
+   * along with the new chat.
+   */
+  socket.on("chatCreated", function(chat) {
+    chats.push(chat);
+
+    postMessage({
+      socketEvent: "chatCreated",
+      chat: chat
     });
   });
 
@@ -420,6 +447,9 @@ addEventListener("message", e => {
           return currentChats;
         })
         .then(resolve, reject);
+      break;
+    case "createChat":
+      createChat(e.data.userId, e.data.chatName).then(resolve, reject);
       break;
     case "getChatUsers":
       getChatUsers(e.data.chatId)
