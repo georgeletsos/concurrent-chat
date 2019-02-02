@@ -103,14 +103,27 @@
         <!-- Instructions -->
         <div
           id="instructions-container"
-          class="w-4/5 bg-grey-darker flex items-center justify-center rounded-r-lg hidden"
+          class="w-4/5 bg-grey-darker flex flex-col items-center justify-center rounded-r-lg hidden"
         >
-          <ul class="list-reset">
-            <li class="py-4 text-lg text-grey-lighter">
-              1. Click on a chat on the list to the left, to join the chat room
+          <!-- No Chat Message -->
+          <div
+            id="no-chat-container"
+            class="p-4 w-full border-b border-solid border-grey-dark hidden"
+          >
+            <div class="mb-4 text-2xl text-grey-lighter text-center uppercase">
+              No Chat
+            </div>
+            <div class="text-base text-grey-lighter text-center">
+              Apologies but there is no chat here.
+            </div>
+          </div>
+
+          <ul class="p-4 list-reset">
+            <li class="mb-4 text-base text-grey-lighter">
+              1. Click on a chat on the list to the left to join the chat room
               and start chatting!
             </li>
-            <li class="py-4 text-lg text-grey-lighter">
+            <li class="text-base text-grey-lighter">
               2. Create a new chat by clicking the button on the bottom of the
               list to the left.
             </li>

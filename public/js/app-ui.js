@@ -49,6 +49,8 @@ window.AppUi = (function() {
       "instructions-container"
     );
 
+    this._$noChatContainer = document.getElementById("no-chat-container");
+
     this._$messagesContainer = document.getElementById("messages-container");
 
     this._$messages = document.getElementById("messages");
@@ -105,21 +107,22 @@ window.AppUi = (function() {
       this._createChatHandler.bind(this)
     );
 
-    /** Make an async API call to get the list of chats... */
-    AppWorker.api
-      .postMessage({
-        action: "getChats"
-      })
-      .then(chats => {
-        /** Then draw the list of chats on the UI. */
-        this.drawChats(chats);
+    /** Make an API call to get the list of chats... */
+    let chats = await AppWorker.api.postMessage({
+      action: "getChats"
+    });
 
-        /** And show the container of the list of chats. */
-        this._$chatsContainer.classList.remove("hidden");
-      });
+    /** Then draw the list of chats on the UI. */
+    this.drawChats(chats);
+
+    /** And show the container of the list of chats. */
+    this._$chatsContainer.classList.remove("hidden");
 
     /** If there's no chat id in the page URL... */
     if (!this._chatId) {
+      /** Remove the container of the no chat message. */
+      this._$noChatContainer.parentNode.removeChild(this._$noChatContainer);
+
       /** Remove the container of messages. */
       this._$messagesContainer.parentNode.removeChild(this._$messagesContainer);
 
@@ -132,7 +135,40 @@ window.AppUi = (function() {
       return;
     }
 
-    /** Otherwise, continue by making another async API call to get the list of users of current Chat... */
+    /** If there's a chat id in the page URL... */
+    if (this._chatId) {
+      /** Look for the current chat id in the list of chats... */
+      let chat = chats.find(chat => chat.id === this._chatId);
+
+      /** If a chat with the current chat id could not be found in the list of chats... */
+      if (!chat) {
+        /** Remove the container of messages. */
+        this._$messagesContainer.parentNode.removeChild(
+          this._$messagesContainer
+        );
+
+        /** Remove the container of users. */
+        this._$usersContainer.parentNode.removeChild(this._$usersContainer);
+
+        /** Show the container of the no chat message. */
+        this._$noChatContainer.classList.remove("hidden");
+
+        /** Finish here by showing the container of instructions. */
+        this._$instructionsContainer.classList.remove("hidden");
+
+        return;
+      }
+    }
+
+    /** Otherwise, remove the container of the no chat message. */
+    this._$noChatContainer.parentNode.removeChild(this._$noChatContainer);
+
+    /** Remove the container of instructions. */
+    this._$instructionsContainer.parentNode.removeChild(
+      this._$instructionsContainer
+    );
+
+    /** Continue by making an async API call to get the list of users of the current chat... */
     AppWorker.api
       .postMessage({
         action: "getChatUsers",
@@ -146,7 +182,7 @@ window.AppUi = (function() {
         this._$usersContainer.classList.remove("hidden");
       });
 
-    /** Make yet another async API call to get the list of messages of current chat... */
+    /** Make yet another async API call to get the list of messages of the current chat... */
     AppWorker.api
       .postMessage({
         action: "getChatMessages",
