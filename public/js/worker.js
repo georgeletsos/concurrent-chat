@@ -178,7 +178,7 @@ function getChats() {
  * @returns {Promise} A promise that is resolved with the new chat.
  */
 function createChat(userId = "", chatName = "") {
-  return api("post", `/api/chat/create`, {
+  return api("post", `/api/chats/create`, {
     userId: userId,
     chatName: chatName
   });
@@ -190,7 +190,7 @@ function createChat(userId = "", chatName = "") {
  * @returns {Promise} A promise that is resolved with the list of users.
  */
 function getChatUsers(chatId = "") {
-  return api("get", `/api/chat/${chatId}/users`);
+  return api("get", `/api/chats/${chatId}/users`);
 }
 
 /**
@@ -199,7 +199,7 @@ function getChatUsers(chatId = "") {
  * @returns {Promise} A promise that is resolved with the list of messages.
  */
 function getChatMessages(chatId = "") {
-  return api("get", `/api/chat/${chatId}/messages`);
+  return api("get", `/api/chats/${chatId}/messages`);
 }
 
 /**
@@ -210,7 +210,7 @@ function getChatMessages(chatId = "") {
  * @returns {Promise} A promise that is resolved with the message.
  */
 function postChatMessage(chatId = "", userId = "", messageContent = "") {
-  return api("post", `/api/chat/${chatId}/message`, {
+  return api("post", `/api/chats/${chatId}/message`, {
     userId: userId,
     messageContent: messageContent
   });
@@ -223,7 +223,7 @@ function postChatMessage(chatId = "", userId = "", messageContent = "") {
  * @returns {Promise} A promise that is resolved or rejected with no payload.
  */
 function typing(chatId = "", userId = "") {
-  return api("post", `/api/chat/${chatId}/typing`, {
+  return api("post", `/api/chats/${chatId}/typing`, {
     userId: userId
   });
 }
