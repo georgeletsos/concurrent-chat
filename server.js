@@ -20,11 +20,11 @@ const routes = [
   [/^\/api\/auth\/register$/i, handlers.registerUser],
   [/^\/api\/auth\/login$/i, handlers.loginUser],
   [/^\/api\/chats$/i, handlers.getChats],
-  [/^\/api\/chat\/(.*)\/users$/i, handlers.getChatUsers],
-  [/^\/api\/chat\/(.*)\/messages$/i, handlers.getChatMessages],
-  [/^\/api\/chat\/(.*)\/message$/i, handlers.postChatMessage],
-  [/^\/api\/chat\/(.*)\/typing$/i, handlers.typing],
-  [/^\/api\/chat\/create$/i, handlers.createChat],
+  [/^\/api\/chats\/(.*)\/users$/i, handlers.getChatUsers],
+  [/^\/api\/chats\/(.*)\/messages$/i, handlers.getChatMessages],
+  [/^\/api\/chats\/(.*)\/message$/i, handlers.postChatMessage],
+  [/^\/api\/chats\/(.*)\/typing$/i, handlers.typing],
+  [/^\/api\/chats\/create$/i, handlers.createChat],
   [/^\/(.+)\.(js|css|svg)$/i, handlers.staticFile],
   [/^\/(.*)$/i, handlers.index]
 ];
