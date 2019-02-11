@@ -3,11 +3,11 @@
 /** Core Node module. */
 const http = require("http");
 
+/** The port for the server to listen to. */
+const PORT = process.env.PORT || 8080;
+
 /** Socket.io library. */
 const socketio = require("socket.io");
-
-/** Commander library, very helpful with parsing command line arguments. */
-const commander = require("commander");
 
 /** Our request handler functions that respond to various requests. */
 const handlers = require("./handlers");
@@ -29,15 +29,6 @@ const routes = [
   [/^\/(.*)$/i, handlers.index]
 ];
 
-/** Add command line options using the commander library and parse them. */
-commander
-  .option(
-    "-p, --port <port>",
-    "The port to listen on",
-    process.env.PORT || 8081
-  )
-  .parse(process.argv);
-
 /**
  * Create an HTTP server.
  * This handler will iterate over our routes array, and test for a match.
@@ -53,8 +44,8 @@ const server = http.createServer((req, res) => {
   }
 });
 
-server.listen(commander.port, () => {
-  console.log(`Listening at ${commander.port}`);
+server.listen(PORT, () => {
+  console.log(`Listening at ${PORT}`);
 });
 
 /** Initialize a new instance of socket.io by passing the above server. */
