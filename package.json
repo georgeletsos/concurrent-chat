@@ -7,16 +7,15 @@
     "serve": "npx nodemon server"
   },
   "dependencies": {
-    "commander": "^2.19.0",
     "formidable": "^1.2.1",
     "socket.io": "^2.2.0"
   },
   "devDependencies": {
-    "eslint": "^5.11.0",
-    "eslint-config-prettier": "^3.3.0",
+    "eslint": "^5.13.0",
+    "eslint-config-prettier": "^3.6.0",
     "eslint-plugin-prettier": "^3.0.0",
     "nodemon": "^1.18.10",
-    "prettier": "^1.15.3"
+    "prettier": "^1.16.4"
   },
   "keywords": [],
   "author": "",
