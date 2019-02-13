@@ -2,9 +2,9 @@
   "name": "node-chat",
   "version": "1.0.0",
   "description": "Node chat",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
-    "serve": "npx nodemon server"
+    "serve": "npx nodemon index"
   },
   "dependencies": {
     "formidable": "^1.2.1",
