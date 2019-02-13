@@ -4,6 +4,7 @@
   "description": "Node chat",
   "main": "index.js",
   "scripts": {
+    "start": "npm server",
     "serve": "npx nodemon index"
   },
   "dependencies": {
