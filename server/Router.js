@@ -78,8 +78,9 @@ module.exports = class Router {
    * Home/index route needs to be registered last.
    */
   registerRoutes() {
-    this.get(/^(?:\/.*\/)*(.+\.(?:js|css|svg))$/i, (req, res, filename) =>
-      this.streamStaticFile(res, filename)
+    this.get(
+      /^(\/(?:js|css|img)\/[^/].+\.(?:js|css|svg))$/i,
+      (req, res, filename) => this.streamStaticFile(res, filename)
     );
 
     this.post(/^\/api\/auth\/register$/i, (req, res) =>
@@ -177,11 +178,10 @@ module.exports = class Router {
   /**
    * Stream a static file.
    * @param {Response} res The HTTP response.
-   * @param {String} filename The name of the file.
+   * @param {String} filePath The file and its parent folder.
    */
-  streamStaticFile(res, filename) {
-    let staticFolder = this.getStaticFolder(filename);
-    let file = path.join(__dirname, "..", "public", staticFolder, filename);
+  streamStaticFile(res, filePath) {
+    let file = path.join(__dirname, "..", "public", filePath);
 
     this.streamFile(res, file);
   }
@@ -212,26 +212,6 @@ module.exports = class Router {
     });
 
     stream.pipe(res);
-  }
-
-  /**
-   * Get the name of the static folder based on the extension of the file.
-   * @param {String} file The name of the file.
-   * @returns {String} The name of the static folder.
-   */
-  getStaticFolder(file) {
-    let fileExtension = path.extname(file);
-
-    switch (fileExtension.toLowerCase()) {
-      case ".js":
-        return "js";
-      case ".css":
-        return "css";
-      case ".svg":
-        return "img";
-      default:
-        return "";
-    }
   }
 
   /**
