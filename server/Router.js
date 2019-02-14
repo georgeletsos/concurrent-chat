@@ -1,4 +1,8 @@
 /**
+ * @typedef {import("fs")} fs
+ * @typedef {import("path")} path
+ * @typedef {import("formidable")} formidable
+ * @typedef {import("formidable").Fields} formidableFields
  * @typedef {import("./Api.js").Api} Api
  * @typedef {import("./Socket.js").Socket} Socket
  */
@@ -17,11 +21,29 @@
  * @property {Function} routeHandler
  */
 
-/** Core Node module. */
+/**
+ * @callback routeCallback
+ * @param {Request} req
+ * @param {Response} res
+ * @param {String} regexpMatch
+ */
+
+/**
+ * @const
+ * @type {fs}
+ */
 const fs = require("fs");
+
+/**
+ * @const
+ * @type {path}
+ */
 const path = require("path");
 
-/** Formidable library. */
+/**
+ * @const
+ * @type {formidable}
+ */
 const formidable = require("formidable");
 
 /** Class representing our Router implementation. */
@@ -29,7 +51,6 @@ module.exports = class Router {
   /**
    * @param {Api} api
    * @param {Socket} socket
-   * @constructor
    */
   constructor(api, socket) {
     /**
@@ -95,7 +116,7 @@ module.exports = class Router {
   /**
    * Register a new GET route.
    * @param {RegExp} regexpUrl A RegExp the request url should match.
-   * @param {Function} routeHandler The callback to run.
+   * @param {routeCallback} routeHandler The callback to run.
    */
   get(regexpUrl, routeHandler) {
     this.routes.push({ method: "get", regexpUrl, routeHandler });
@@ -104,7 +125,7 @@ module.exports = class Router {
   /**
    * Register a new POST route.
    * @param {RegExp} regexpUrl A RegExp the request url should match.
-   * @param {Function} routeHandler The callback to run.
+   * @param {routeCallback} routeHandler The callback to run.
    */
   post(regexpUrl, routeHandler) {
     this.routes.push({ method: "post", regexpUrl, routeHandler });
@@ -136,7 +157,7 @@ module.exports = class Router {
   /**
    * Ensure that the expected HTTP `method` was used with a given request `req`.
    * @param {Request} req The HTTP request.
-   * @param {string} method A HTTP method. Usually get or post.
+   * @param {String} method A HTTP method. Usually get or post.
    * @returns {boolean} True or false.
    */
   ensureRequestMethod(req, method) {
@@ -169,7 +190,7 @@ module.exports = class Router {
    * Stream a file by creating a stream to read the `file`,
    * and piping the `file` to the HTTP `res`.
    * @param {Response} res The HTTP response.
-   * @param {string} file The full path of the file to serve.
+   * @param {String} file The full path of the file to serve.
    */
   streamFile(res, file) {
     let contentType = this.getContentType(file);
@@ -238,7 +259,7 @@ module.exports = class Router {
   /**
    * Use the IncomingForm class from the formidable library to parse the form data of a request.
    * @param {Request} req The HTTP request.
-   * @returns {Promise} A promise that is resolved with the parsed form data.
+   * @returns {Promise<formidableFields>} A promise that is resolved with the parsed form data.
    */
   parseFormFields(req) {
     return new Promise((resolve, reject) => {
@@ -333,7 +354,7 @@ module.exports = class Router {
    * If any form fields are missing, respond with 400.
    * If the chat was not found in memory, respond with 404.
    * @param {Response} res The HTTP response.
-   * @param {string} chatId The id of the specific chat.
+   * @param {String} chatId The id of the specific chat.
    */
   async getChatUsers(res, chatId) {
     if (!chatId) {
@@ -364,7 +385,7 @@ module.exports = class Router {
    * If any form fields are missing, respond with 400.
    * If the chat was not found in memory, respond with 404.
    * @param {Response} res The HTTP response.
-   * @param {string} chatId The id of the specific chat.
+   * @param {String} chatId The id of the specific chat.
    */
   async getChatMessages(res, chatId) {
     if (!chatId) {
@@ -396,7 +417,7 @@ module.exports = class Router {
    * If the chat or the user was not found in memory, respond with 404.
    * @param {Request} req The HTTP request.
    * @param {Response} res The HTTP response.
-   * @param {string} chatId The id of the specific chat.
+   * @param {String} chatId The id of the specific chat.
    */
   async postChatMessage(req, res, chatId) {
     let fields = await this.parseFormFields(req);
@@ -452,7 +473,7 @@ module.exports = class Router {
    * If the chat or the user was not found in memory, respond with 404.
    * @param {Request} req The HTTP request.
    * @param {Response} res The HTTP response.
-   * @param {string} chatId The id of the specific chat.
+   * @param {String} chatId The id of the specific chat.
    */
   async postChatUserTyping(req, res, chatId) {
     let fields = await this.parseFormFields(req);
@@ -494,7 +515,7 @@ module.exports = class Router {
    * If the user was not found in memory, respond with 404.
    * @param {Request} req The HTTP request.
    * @param {Response} res The HTTP response.
-   * @param {string} chatId The id of the specific chat.
+   * @param {String} chatId The id of the specific chat.
    */
   async createChat(req, res) {
     let fields = await this.parseFormFields(req);
