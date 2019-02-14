@@ -1,21 +1,26 @@
 /**
+ * @typedef {import("http").Server} httpServer
+ * @typedef {import("socket.io")} socketio
+ * @typedef {import("socket.io").Server} socketioServer
  * @typedef {import("./Api.js").Api} Api
  */
 
 /**
  * @typedef {Object} Socket
  * @property {Api} api
- * @property {Socket.io} io
+ * @property {socketioServer} io
  */
 
-/** Socket.io library. */
+/**
+ * @const
+ * @type {socketio}
+ */
 const socketio = require("socket.io");
 
 /** Class representing our Socket implementation. */
 module.exports = class Socket {
   /**
    * @param {Api} api
-   * @constructor
    */
   constructor(api) {
     /**
@@ -28,9 +33,13 @@ module.exports = class Socket {
   /**
    * Initialize a new instance of socket.io with the `server`.
    * Listen on the websocket connect event.
-   * @param {http.Server} server
+   * @param {httpServer} server
    */
   connect(server) {
+    /**
+     * Instance of Socket.io Server.
+     * @type {socketioServer}
+     */
     this.io = socketio(server).on("connect", socket => this.onConnect(socket));
   }
 

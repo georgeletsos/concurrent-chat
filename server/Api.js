@@ -1,4 +1,8 @@
 /**
+ * @typedef {import("crypto")} crypto
+ */
+
+/**
  * @typedef {Object} Api
  * @property {Chat[]} chats
  * @property {User[]} users
@@ -13,15 +17,15 @@
  * @property {User} owner
  * @property {User[]} users
  * @property {Message[]} messages
- * @property {number} createdAt
+ * @property {Number} createdAt
  */
 
 /**
  * @typedef {Object} User
  * @property {String} id
- * @property {number} tag
+ * @property {Number} tag
  * @property {String} name
- * @property {number} createdAt
+ * @property {Number} createdAt
  */
 
 /**
@@ -29,17 +33,17 @@
  * @property {String} id
  * @property {User} user
  * @property {String} content
- * @property {number} sentAt
+ * @property {Number} sentAt
  */
 
-/** Core Node modules. */
+/**
+ * @const
+ * @type {crypto}
+ */
 const crypto = require("crypto");
 
 /** Class representing our Api implementation. */
 module.exports = class Api {
-  /**
-   * @constructor
-   */
   constructor() {
     /**
      * List of chats in memory.
@@ -75,7 +79,9 @@ module.exports = class Api {
      */
     this.messages = [];
 
-    /** The user tag generator. */
+    /**
+     * @type {Generator}
+     */
     this.userTagGenerator = this.generateId();
   }
 
@@ -117,7 +123,8 @@ module.exports = class Api {
 
   /**
    * Unique id generator function.
-   * @yields {number} A unique id.
+   * @generator
+   * @yields {Number} A unique id.
    */
   *generateId() {
     let id = 1;

@@ -1,26 +1,44 @@
 /**
+ * @typedef {import("http")} http
+ * @typedef {import("http").Server} httpServer
  * @typedef {import("./Api.js").Api} Api
  * @typedef {import("./Socket.js").Socket} Socket
  * @typedef {import("./Router.js").Router} Router
  */
 
-/** Core Node module. */
+/**
+ * @const
+ * @type {http}
+ */
 const http = require("http");
 
-const Router = require("./Router");
+/**
+ * @const
+ * @type {Api}
+ */
 const Api = require("./Api");
+
+/**
+ * @const
+ * @type {Socket}
+ */
 const Socket = require("./Socket");
+
+/**
+ * @const
+ * @type {Router}
+ */
+const Router = require("./Router");
 
 /** Class representing our Server implementation. */
 module.exports = class Server {
   /**
-   * @param {number} port
-   * @constructor
+   * @param {Number} port
    */
   constructor(port) {
     /**
      * The port for the server to run on.
-     * @type {number}
+     * @type {Number}
      */
     this.port = port;
 
@@ -44,7 +62,7 @@ module.exports = class Server {
 
     /**
      * Instance of http Server.
-     * @type {http.Server}
+     * @type {httpServer}
      */
     this.server = http.createServer((req, res) =>
       this.router.resolveRouting(req, res)
@@ -53,9 +71,7 @@ module.exports = class Server {
     this.socket.connect(this.server);
   }
 
-  /**
-   * Start the server listening for connections.
-   */
+  /** Start the server listening for connections. */
   start() {
     this.server.listen(this.port, () => {
       console.log(`Server running on port ${this.port}`);
