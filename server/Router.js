@@ -5,6 +5,8 @@
  * @typedef {import("formidable").Fields} formidableFields
  * @typedef {import("./Api.js").Api} Api
  * @typedef {import("./Socket.js").Socket} Socket
+ * @typedef {import("./Route.js").Route} Route
+ * @typedef {import("./Route.js").routeCallback} routeCallback
  */
 
 /**
@@ -12,20 +14,6 @@
  * @property {Api} api
  * @property {Socket} socket
  * @property {Route[]} routes
- */
-
-/**
- * @typedef {Object} Route
- * @property {String} method
- * @property {RegExp} regexpUrl
- * @property {Function} routeHandler
- */
-
-/**
- * @callback routeCallback
- * @param {Request} req
- * @param {Response} res
- * @param {String} regexpMatch
  */
 
 /**
@@ -45,6 +33,12 @@ const path = require("path");
  * @type {formidable}
  */
 const formidable = require("formidable");
+
+/**
+ * @const
+ * @type {Route}
+ */
+const Route = require("./Route");
 
 /** Class representing our Router implementation. */
 module.exports = class Router {
@@ -120,7 +114,7 @@ module.exports = class Router {
    * @param {routeCallback} routeHandler The callback to run.
    */
   get(regexpUrl, routeHandler) {
-    this.routes.push({ method: "get", regexpUrl, routeHandler });
+    this.routes.push(new Route("get", regexpUrl, routeHandler));
   }
 
   /**
@@ -129,7 +123,7 @@ module.exports = class Router {
    * @param {routeCallback} routeHandler The callback to run.
    */
   post(regexpUrl, routeHandler) {
-    this.routes.push({ method: "post", regexpUrl, routeHandler });
+    this.routes.push(new Route("post", regexpUrl, routeHandler));
   }
 
   /**
