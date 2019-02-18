@@ -1,25 +1,17 @@
-/**
- * @typedef {import("./User")} User
- */
+const Mongoose = require("../Mongoose");
 
-const mongoose = require("mongoose");
-
-/**
- * @const
- * @type {User}
- */
 const User = require("./User");
 
-const messageSchema = new mongoose.Schema(
+const messageSchema = new Mongoose.Schema(
   {
     content: { type: String, required: true },
     chat: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Mongoose.Schema.Types.ObjectId,
       required: true,
       ref: "Chat"
     },
     user: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: Mongoose.Schema.Types.ObjectId,
       required: true,
       ref: "User"
     }
@@ -56,6 +48,6 @@ messageSchema.methods.toClientJSON = function() {
   return JSON.stringify(this.toClientObject());
 };
 
-const Message = mongoose.model("Message", messageSchema);
+const Message = Mongoose.model("Message", messageSchema);
 
 module.exports = Message;

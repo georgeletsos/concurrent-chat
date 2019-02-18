@@ -1,67 +1,37 @@
-/**
- * @typedef {import("http")} http
- * @typedef {import("http").Server} httpServer
- * @typedef {import("./Socket.js").Socket} Socket
- * @typedef {import("./Router.js").Router} Router
- */
-
-/**
- * @const
- * @type {http}
- */
 const http = require("http");
-
-/**
- * @const
- * @type {Socket}
- */
 const Socket = require("./Socket");
-
-/**
- * @const
- * @type {Router}
- */
 const Router = require("./Router");
+const Mongoose = require("./Mongoose");
+const Chat = require("./models/Chat");
 
 /** Class representing our Server implementation. */
 module.exports = class Server {
-  /**
-   * @param {Number} port
-   */
-  constructor(port) {
+  constructor() {
     /**
      * The port for the server to run on.
      * @type {Number}
      */
-    this.port = port;
+    this.port = process.env.PORT || 8080;
 
-    /**
-     * Instance of Socket.
-     * @type {Socket}
-     */
-    this.socket = new Socket();
+    Mongoose.connect().then(async () => {
+      console.log("Connected to MongoDB");
 
-    /**
-     * Instance of Router.
-     * @type {Router}
-     */
-    this.router = new Router(this.socket);
+      await Chat.createGeneralChatIfNotExists();
 
-    /**
-     * Instance of http Server.
-     * @type {httpServer}
-     */
-    this.server = http.createServer((req, res) =>
-      this.router.resolveRouting(req, res)
-    );
+      this.socket = new Socket(Mongoose);
+      this.router = new Router(Mongoose, this.socket);
 
-    this.socket.connect(this.server);
-  }
+      this.server = http.createServer((req, res) =>
+        this.router.resolveRouting(req, res)
+      );
 
-  /** Start the server listening for connections. */
-  start() {
-    this.server.listen(this.port, () => {
-      console.log(`Server running on port ${this.port}`);
+      /** Connect socket to this server. */
+      await this.socket.connect(this.server);
+
+      /** Start the server listening for connections. */
+      this.server.listen(this.port, () => {
+        console.log(`Server running on port ${this.port}`);
+      });
     });
   }
 };

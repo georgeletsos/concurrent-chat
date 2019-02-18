@@ -1,10 +1,6 @@
-/**
- * @typedef {import("mongoose").Query} mongooseQuery
- */
+const Mongoose = require("../Mongoose");
 
-const mongoose = require("mongoose");
-
-const userSchema = new mongoose.Schema(
+const userSchema = new Mongoose.Schema(
   {
     name: { type: String, required: true },
     tag: { type: Number, required: true }
@@ -38,12 +34,12 @@ userSchema.methods.toClientJSON = function() {
 
 /**
  * Find the most recently added User.
- * @returns {mongooseQuery}
+ * @returns {User}
  */
 userSchema.statics.getLatestUser = function() {
   return this.findOne().sort({ createdAt: -1 });
 };
 
-const User = mongoose.model("User", userSchema);
+const User = Mongoose.model("User", userSchema);
 
 module.exports = User;
