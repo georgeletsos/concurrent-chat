@@ -1,19 +1,9 @@
 /**
- * @typedef {import("mongoose").Mongoose} mongoose
- * @typedef {import("mongoose").Schema} mongooseSchema
  * @typedef {import("mongoose").Query} mongooseQuery
  */
 
-/**
- * @const
- * @type {mongoose}
- */
 const mongoose = require("mongoose");
 
-/**
- * @const
- * @type {mongooseSchema}
- */
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
@@ -24,7 +14,7 @@ const userSchema = new mongoose.Schema(
 
 /**
  * Transform the output of `toObject` further, as to send to client only the info it needs.
- * @returns {Object} A `User` with the only info that we need to show to the client.
+ * @returns {Object} A User with the only info that we need to show to the client.
  */
 userSchema.methods.toClientObject = function() {
   return this.toObject({
@@ -54,11 +44,6 @@ userSchema.statics.getLatestUser = function() {
   return this.findOne().sort({ createdAt: -1 });
 };
 
-/** Class representing our User model. */
-class User extends mongoose.model {
-  constructor() {
-    super("User", userSchema);
-  }
-}
+const User = mongoose.model("User", userSchema);
 
-module.exports = new User();
+module.exports = User;
