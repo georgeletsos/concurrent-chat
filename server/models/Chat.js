@@ -1,21 +1,13 @@
-/**
- * @typedef {import("./User")} User
- */
+const Mongoose = require("../Mongoose");
 
-const mongoose = require("mongoose");
-
-/**
- * @const
- * @type {User}
- */
 const User = require("./User");
 
-const chatSchema = new mongoose.Schema(
+const chatSchema = new Mongoose.Schema(
   {
     name: { type: String, required: true },
     users: [
       {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Mongoose.Schema.Types.ObjectId,
         ref: "User"
       }
     ]
@@ -94,6 +86,6 @@ chatSchema.statics.createGeneralChatIfNotExists = async function() {
   }
 };
 
-const Chat = mongoose.model("Chat", chatSchema);
+const Chat = Mongoose.model("Chat", chatSchema);
 
 module.exports = Chat;

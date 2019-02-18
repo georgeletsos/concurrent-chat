@@ -1,98 +1,28 @@
-/**
- * @typedef {import("fs")} fs
- * @typedef {import("path")} path
- * @typedef {import("formidable")} formidable
- * @typedef {import("formidable").Fields} formidableFields
- * @typedef {import("./Socket.js").Socket} Socket
- * @typedef {import("./Route.js").Route} Route
- * @typedef {import("./Route.js").routeCallback} routeCallback
- * @typedef {import("./models/User")} User
- * @typedef {import("./models/Chat")} Chat
- * @typedef {import("./models/Message")} Message
- */
-
-/**
- * @typedef {Object} Router
- * @property {Socket} socket
- * @property {Route[]} routes
- */
-
-/**
- * @const
- * @type {fs}
- */
 const fs = require("fs");
-
-/**
- * @const
- * @type {path}
- */
 const path = require("path");
-
-/**
- * @const
- * @type {formidable}
- */
 const formidable = require("formidable");
-
-/**
- * @const
- * @type {Route}
- */
 const Route = require("./Route");
-
-/**
- * @const
- * @type {mongoose}
- */
-const mongoose = require("mongoose");
-
-/**
- * @const
- * @type {User}
- */
 const User = require("./models/User");
-
-/**
- * @const
- * @type {Chat}
- */
 const Chat = require("./models/Chat");
-
-/**
- * @const
- * @type {Message}
- */
 const Message = require("./models/Message");
 
 /** Class representing our Router implementation. */
 module.exports = class Router {
   /**
-   * @param {Socket} socket
+   * @param {Mongoose} Mongoose The mongoose instance.
+   * @param {Socket} Socket The socket instance.
    */
-  constructor(socket) {
-    /**
-     * Instance of Socket.
-     * @type {Socket}
-     */
-    this.socket = socket;
+  constructor(Mongoose, Socket) {
+    this.Mongoose = Mongoose;
+    this.Socket = Socket;
 
     /**
+     * List of Routes.
      * @type {Route[]}
      */
     this.routes = [];
 
     this.registerRoutes();
-
-    mongoose
-      .connect("mongodb://localhost:27017/node-chat", {
-        useNewUrlParser: true
-      })
-      .then(async () => {
-        console.log("Connected to MongoDB");
-
-        await Chat.createGeneralChatIfNotExists();
-      });
   }
 
   /**
@@ -317,7 +247,7 @@ module.exports = class Router {
     let fields = await this.parseFormFields(req);
     let userId = fields.userId;
 
-    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+    if (!userId || !this.Mongoose.isValidObjectId(userId)) {
       res.writeHead(400);
       res.end();
       return;
@@ -357,7 +287,7 @@ module.exports = class Router {
    * @param {String} chatId The id of the specific chat.
    */
   async getChatUsers(res, chatId) {
-    if (!chatId || !mongoose.Types.ObjectId.isValid(chatId)) {
+    if (!chatId || !this.Mongoose.isValidObjectId(chatId)) {
       res.writeHead(400);
       res.end();
       return;
@@ -393,7 +323,7 @@ module.exports = class Router {
    * @param {String} chatId The id of the specific chat.
    */
   async getChatMessages(res, chatId) {
-    if (!chatId || !mongoose.Types.ObjectId.isValid(chatId)) {
+    if (!chatId || !this.Mongoose.isValidObjectId(chatId)) {
       res.writeHead(400);
       res.end();
       return;
@@ -431,9 +361,9 @@ module.exports = class Router {
 
     if (
       !chatId ||
-      !mongoose.Types.ObjectId.isValid(chatId) ||
+      !this.Mongoose.isValidObjectId(chatId) ||
       !userId ||
-      !mongoose.Types.ObjectId.isValid(userId) ||
+      !this.Mongoose.isValidObjectId(userId) ||
       !messageContent
     ) {
       res.writeHead(400);
@@ -479,10 +409,10 @@ module.exports = class Router {
     res.end(message.toClientJSON());
 
     /** Emit to every websocket in the chat room that a message has just been posted. */
-    this.socket.io.to(chatId).emit("chatMessage", message.toClientObject());
+    this.Socket.io.to(chatId).emit("chatMessage", message.toClientObject());
 
     /** Emit to every websocket in the chat room that a user has stopped typing. */
-    this.socket.io.to(chatId).emit("userStoppedTyping", user.toClientObject());
+    this.Socket.io.to(chatId).emit("userStoppedTyping", user.toClientObject());
   }
 
   /**
@@ -501,9 +431,9 @@ module.exports = class Router {
 
     if (
       !chatId ||
-      !mongoose.Types.ObjectId.isValid(chatId) ||
+      !this.Mongoose.isValidObjectId(chatId) ||
       !userId ||
-      !mongoose.Types.ObjectId.isValid(userId)
+      !this.Mongoose.isValidObjectId(userId)
     ) {
       res.writeHead(400);
       res.end();
@@ -538,7 +468,7 @@ module.exports = class Router {
     res.end();
 
     /** Emit to every websocket in the chat room that a user has started typing. */
-    this.socket.io.to(chatId).emit("userStartedTyping", user.toClientObject());
+    this.Socket.io.to(chatId).emit("userStartedTyping", user.toClientObject());
   }
 
   /**
@@ -556,7 +486,7 @@ module.exports = class Router {
     let userId = fields.userId;
     let chatName = fields.chatName;
 
-    if (!userId || !mongoose.Types.ObjectId.isValid(userId) || !chatName) {
+    if (!userId || !this.Mongoose.isValidObjectId(userId) || !chatName) {
       res.writeHead(400);
       res.end();
       return;
@@ -580,6 +510,6 @@ module.exports = class Router {
     res.end(chat.toClientJSON());
 
     /** Emit to every websocket that a new chat has been created. */
-    this.socket.io.emit("chatCreated", chat.toClientObject());
+    this.Socket.io.emit("chatCreated", chat.toClientObject());
   }
 };

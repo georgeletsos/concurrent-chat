@@ -1,59 +1,25 @@
-/**
- * @typedef {import("http").Server} httpServer
- * @typedef {import("mongoose")} mongoose
- * @typedef {import("socket.io")} socketio
- * @typedef {import("socket.io").Server} socketioServer
- * @typedef {import("./models/User")} User
- * @typedef {import("./models/Chat")} Chat
- */
-
-/**
- * @typedef {Object} Socket
- * @property {socketioServer} io
- */
-
-/**
- * @const
- * @type {socketio}
- */
-const socketio = require("socket.io");
-
-/**
- * @const
- * @type {mongoose}
- */
-const mongoose = require("mongoose");
-
-/**
- * @const
- * @type {User}
- */
+const SocketIo = require("socket.io");
 const User = require("./models/User");
-
-/**
- * @const
- * @type {Chat}
- */
 const Chat = require("./models/Chat");
 
 /** Class representing our Socket implementation. */
 module.exports = class Socket {
   /**
-   * Start with connecting to MongoDB.
-   * Initialize a new instance of socket.io with the `server`.
-   * Listen on the websocket connect event.
-   * @param {httpServer} server
+   * @param {Mongoose} Mongoose The mongoose instance.
    */
-  async connect(server) {
-    await mongoose.connect("mongodb://localhost:27017/node-chat", {
-      useNewUrlParser: true
-    });
+  constructor(Mongoose) {
+    this.Mongoose = Mongoose;
+  }
 
-    /**
-     * Instance of Socket.io Server.
-     * @type {socketioServer}
-     */
-    this.io = socketio(server).on("connect", socket => this.onConnect(socket));
+  /**
+   * Initialize a new instance of socket.io with the given server.
+   * Listen on the websocket connect event.
+   * @param {Server} server The given server.
+   */
+  connect(server) {
+    this.io = SocketIo(server);
+
+    this.io.on("connect", socket => this.onConnect(socket));
   }
 
   /**
@@ -74,8 +40,8 @@ module.exports = class Socket {
       userId = socket.handshake.query.userId;
 
     if (
-      !mongoose.Types.ObjectId.isValid(chatId) ||
-      !mongoose.Types.ObjectId.isValid(userId)
+      !this.Mongoose.isValidObjectId(chatId) ||
+      !this.Mongoose.isValidObjectId(userId)
     ) {
       return;
     }
