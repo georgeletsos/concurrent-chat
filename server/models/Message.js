@@ -1,13 +1,7 @@
 /**
- * @typedef {import("mongoose").Mongoose} mongoose
- * @typedef {import("mongoose").Schema} mongooseSchema
  * @typedef {import("./User")} User
  */
 
-/**
- * @const
- * @type {mongoose}
- */
 const mongoose = require("mongoose");
 
 /**
@@ -16,10 +10,6 @@ const mongoose = require("mongoose");
  */
 const User = require("./User");
 
-/**
- * @const
- * @type {mongooseSchema}
- */
 const messageSchema = new mongoose.Schema(
   {
     content: { type: String, required: true },
@@ -39,7 +29,7 @@ const messageSchema = new mongoose.Schema(
 
 /**
  * Transform the output of `toObject` further, as to send to client only the info it needs.
- * @returns {Object} A `Chat` with the only info that we need to show to the client.
+ * @returns {Object} A Message with the only info that we need to show to the client.
  */
 messageSchema.methods.toClientObject = function() {
   return this.toObject({
@@ -66,11 +56,6 @@ messageSchema.methods.toClientJSON = function() {
   return JSON.stringify(this.toClientObject());
 };
 
-/** Class representing our Message model. */
-class Message extends mongoose.model {
-  constructor() {
-    super("Message", messageSchema);
-  }
-}
+const Message = mongoose.model("Message", messageSchema);
 
-module.exports = new Message();
+module.exports = Message;

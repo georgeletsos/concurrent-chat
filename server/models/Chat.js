@@ -1,13 +1,7 @@
 /**
- * @typedef {import("mongoose").Mongoose} mongoose
- * @typedef {import("mongoose").Schema} mongooseSchema
  * @typedef {import("./User")} User
  */
 
-/**
- * @const
- * @type {mongoose}
- */
 const mongoose = require("mongoose");
 
 /**
@@ -16,10 +10,6 @@ const mongoose = require("mongoose");
  */
 const User = require("./User");
 
-/**
- * @const
- * @type {mongooseSchema}
- */
 const chatSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
@@ -35,7 +25,7 @@ const chatSchema = new mongoose.Schema(
 
 /**
  * Transform the output of `toObject` further, as to send to client only the info it needs.
- * @returns {Object} A `Chat` with the only info that we need to show to the client.
+ * @returns {Object} A Chat with the only info that we need to show to the client.
  */
 chatSchema.methods.toClientObject = function() {
   return this.toObject({
@@ -59,7 +49,7 @@ chatSchema.methods.toClientJSON = function() {
 /**
  * Transform the output of `toObject` further, as to send to client only the info it needs.
  * Include the users this time.
- * @returns {Object} A `Chat` with the only info that we need to show to the client, including the users this time.
+ * @returns {Object} A Chat with the only info that we need to show to the client, including the users this time.
  */
 chatSchema.methods.toClientObjectWithUsers = function() {
   return this.toObject({
@@ -104,11 +94,6 @@ chatSchema.statics.createGeneralChatIfNotExists = async function() {
   }
 };
 
-/** Class representing our Chat model. */
-class Chat extends mongoose.model {
-  constructor() {
-    super("Chat", chatSchema);
-  }
-}
+const Chat = mongoose.model("Chat", chatSchema);
 
-module.exports = new Chat();
+module.exports = Chat;
