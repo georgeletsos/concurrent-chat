@@ -5,15 +5,15 @@ const Chat = require("./models/Chat");
 /** Class representing our Socket implementation. */
 module.exports = class Socket {
   /**
-   * @param {Mongoose} Mongoose The mongoose instance.
+   * @param {Mongoose} mongoose Our mongoose instance.
    */
-  constructor(Mongoose) {
-    this.Mongoose = Mongoose;
+  constructor(mongoose) {
+    this.mongoose = mongoose;
   }
 
   /**
    * Initialize a new instance of socket.io with the given server.
-   * Listen on the websocket connect event.
+   * Listen on the connection event for incoming sockets.
    * @param {Server} server The given server.
    */
   connect(server) {
@@ -28,9 +28,9 @@ module.exports = class Socket {
    * If the user is not already in the chat, add the user to the chat.
    * Add the websocket to the room of the specific chat.
    * Emit to every websocket in the chat room that the user has just been connected.
-   * Finally listen to the websocket disconnect event:
-   * when the user has been disconnected, remove the user from the list of users of the chat
-   * and emit to every websocket in chat the room that the user has been disconnected.
+   * Finally listen on the disconnection event:
+   *   when the user has been disconnected, remove the user from the list of users of the chat
+   *   and emit to every websocket in chat the room that the user has been disconnected.
    * @param {Object} socket The connected websocket.
    * @param {string} socket.chatId The specific chat id.
    * @param {string} socket.userId The specific user id.
@@ -40,8 +40,8 @@ module.exports = class Socket {
       userId = socket.handshake.query.userId;
 
     if (
-      !this.Mongoose.isValidObjectId(chatId) ||
-      !this.Mongoose.isValidObjectId(userId)
+      !this.mongoose.isValidObjectId(chatId) ||
+      !this.mongoose.isValidObjectId(userId)
     ) {
       return;
     }
@@ -69,7 +69,7 @@ module.exports = class Socket {
     /** Emit to every websocket in the chat room, that the user has been connected. */
     this.io.to(chatId).emit("userConnected", user.toClientObject());
 
-    /** Listen to the websocket disconnect event. */
+    /** Listen on the disconnection event. */
     socket.on("disconnect", async () => {
       /** Remove the user from the list of users of the chat. */
       let chatuserIndex = chat.users.findIndex(chatUser =>
