@@ -1,7 +1,6 @@
 /**
  * @typedef {import("http")} http
  * @typedef {import("http").Server} httpServer
- * @typedef {import("./Api.js").Api} Api
  * @typedef {import("./Socket.js").Socket} Socket
  * @typedef {import("./Router.js").Router} Router
  */
@@ -11,12 +10,6 @@
  * @type {http}
  */
 const http = require("http");
-
-/**
- * @const
- * @type {Api}
- */
-const Api = require("./Api");
 
 /**
  * @const
@@ -43,22 +36,16 @@ module.exports = class Server {
     this.port = port;
 
     /**
-     * Instance of Api.
-     * @type {Api}
-     */
-    this.api = new Api();
-
-    /**
      * Instance of Socket.
      * @type {Socket}
      */
-    this.socket = new Socket(this.api);
+    this.socket = new Socket();
 
     /**
      * Instance of Router.
      * @type {Router}
      */
-    this.router = new Router(this.api, this.socket);
+    this.router = new Router(this.socket);
 
     /**
      * Instance of http Server.
