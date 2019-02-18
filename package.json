@@ -12,10 +12,10 @@
     "socket.io": "^2.2.0"
   },
   "devDependencies": {
-    "eslint": "^5.13.0",
+    "eslint": "^5.14.0",
     "eslint-config-prettier": "^3.6.0",
     "eslint-plugin-prettier": "^3.0.0",
-    "mongoose": "^5.4.12",
+    "mongoose": "^5.4.13",
     "nodemon": "^1.18.10",
     "prettier": "^1.16.4"
   },
