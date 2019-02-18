@@ -3,15 +3,16 @@
  * @typedef {import("path")} path
  * @typedef {import("formidable")} formidable
  * @typedef {import("formidable").Fields} formidableFields
- * @typedef {import("./Api.js").Api} Api
  * @typedef {import("./Socket.js").Socket} Socket
  * @typedef {import("./Route.js").Route} Route
  * @typedef {import("./Route.js").routeCallback} routeCallback
+ * @typedef {import("./models/User")} User
+ * @typedef {import("./models/Chat")} Chat
+ * @typedef {import("./models/Message")} Message
  */
 
 /**
  * @typedef {Object} Router
- * @property {Api} api
  * @property {Socket} socket
  * @property {Route[]} routes
  */
@@ -40,19 +41,36 @@ const formidable = require("formidable");
  */
 const Route = require("./Route");
 
+/**
+ * @const
+ * @type {mongoose}
+ */
+const mongoose = require("mongoose");
+
+/**
+ * @const
+ * @type {User}
+ */
+const User = require("./models/User");
+
+/**
+ * @const
+ * @type {Chat}
+ */
+const Chat = require("./models/Chat");
+
+/**
+ * @const
+ * @type {Message}
+ */
+const Message = require("./models/Message");
+
 /** Class representing our Router implementation. */
 module.exports = class Router {
   /**
-   * @param {Api} api
    * @param {Socket} socket
    */
-  constructor(api, socket) {
-    /**
-     * Instance of Api.
-     * @type {Api}
-     */
-    this.api = api;
-
+  constructor(socket) {
     /**
      * Instance of Socket.
      * @type {Socket}
@@ -65,6 +83,16 @@ module.exports = class Router {
     this.routes = [];
 
     this.registerRoutes();
+
+    mongoose
+      .connect("mongodb://localhost:27017/node-chat", {
+        useNewUrlParser: true
+      })
+      .then(async () => {
+        console.log("Connected to MongoDB");
+
+        await Chat.createGeneralChatIfNotExists();
+      });
   }
 
   /**
@@ -255,34 +283,31 @@ module.exports = class Router {
    */
   async registerUser(req, res) {
     let fields = await this.parseFormFields(req);
+    let username = fields.username;
 
-    if (!fields.username) {
+    if (!username) {
       res.writeHead(400, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ username: "This field is required" }));
       return;
     }
 
-    let user = {
-      id: this.api.generateUuid(),
-      tag: this.api.userTagGenerator.next().value,
-      name: fields.username,
-      createdAt: new Date().getTime()
-    };
+    let latestUser = await User.getLatestUser();
 
-    this.api.users.push(user);
+    let tag = latestUser ? latestUser.tag + 1 : 1;
 
-    let pluckedUser = {
-      id: user.id,
-      tag: user.tag,
-      name: user.name
-    };
+    let user = new User({
+      name: username,
+      tag: tag
+    });
+
+    await user.save();
 
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(pluckedUser));
+    res.end(user.toClientJSON());
   }
 
   /**
-   * Log a user in to the API, after finding the user in memory.
+   * Log a user in to the API, after finding the user in the database.
    * If any form fields are missing, respond with 400.
    * If the user was not found in memory, respond with 404.
    * @param {Request} req The HTTP request.
@@ -290,14 +315,15 @@ module.exports = class Router {
    */
   async loginUser(req, res) {
     let fields = await this.parseFormFields(req);
+    let userId = fields.userId;
 
-    if (!fields.userId) {
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
       res.writeHead(400);
       res.end();
       return;
     }
 
-    let user = this.api.findUserById(fields.userId);
+    let user = await User.findById(userId);
 
     if (!user) {
       res.writeHead(404);
@@ -310,20 +336,20 @@ module.exports = class Router {
   }
 
   /**
-   * Get the list of chats in memory and respond with the said list.
+   * Get the list of chats from the database and respond with the said list.
    * @param {Response} res The HTTP response.
    */
   async getChats(res) {
-    let pluckedChats = this.api.chats.map(chat => {
-      return { id: chat.id, name: chat.name };
-    });
+    let chats = await Chat.find();
+
+    chats = chats.map(chat => chat.toClientObject());
 
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(pluckedChats));
+    res.end(JSON.stringify(chats));
   }
 
   /**
-   * Get the list of users of a specific chat, after finding the chat in memory
+   * Get the list of users of a specific chat, after finding the chat in the database
    * and respond with the said list.
    * If any form fields are missing, respond with 400.
    * If the chat was not found in memory, respond with 404.
@@ -331,13 +357,20 @@ module.exports = class Router {
    * @param {String} chatId The id of the specific chat.
    */
   async getChatUsers(res, chatId) {
-    if (!chatId) {
+    if (!chatId || !mongoose.Types.ObjectId.isValid(chatId)) {
       res.writeHead(400);
       res.end();
       return;
     }
 
-    let chat = this.api.findChatById(chatId);
+    /**
+     * Find the specific chat in the database, with all its users.
+     * Also sort the users alphabetically.
+     */
+    let chat = await Chat.findById(chatId).populate({
+      path: "users",
+      options: { sort: { name: "asc" } }
+    });
 
     if (!chat) {
       res.writeHead(404);
@@ -345,16 +378,14 @@ module.exports = class Router {
       return;
     }
 
-    let pluckedChatUsers = chat.users.map(user => {
-      return { id: user.id, tag: user.tag, name: user.name };
-    });
+    let users = chat.users.map(user => user.toClientObject());
 
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(pluckedChatUsers));
+    res.end(JSON.stringify(users));
   }
 
   /**
-   * Get the list of messages of a specific chat, after finding the chat in memory
+   * Get the list of messages of a specific chat, after finding the chat in the database
    * and respond with the said list.
    * If any form fields are missing, respond with 400.
    * If the chat was not found in memory, respond with 404.
@@ -362,26 +393,26 @@ module.exports = class Router {
    * @param {String} chatId The id of the specific chat.
    */
   async getChatMessages(res, chatId) {
-    if (!chatId) {
+    if (!chatId || !mongoose.Types.ObjectId.isValid(chatId)) {
       res.writeHead(400);
       res.end();
       return;
     }
 
-    let chat = this.api.findChatById(chatId);
+    /**
+     * Find all the messages of the specific chats,
+     * along with the users.
+     */
+    let messages = await Message.find({ chat: chatId }).populate("user");
 
-    if (!chat) {
-      res.writeHead(404);
-      res.end();
-      return;
-    }
+    messages = messages.map(message => message.toClientObject());
 
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(chat.messages));
+    res.end(JSON.stringify(messages));
   }
 
   /**
-   * Post a message of a specific user in a specific chat, after finding the chat and the user in memory
+   * Post a message of a specific user in a specific chat, after finding the chat and the user in the database
    * and respond with the said message.
    * Emit to every websocket in the chat room that a message has just been posted,
    * along with the said message.
@@ -395,14 +426,26 @@ module.exports = class Router {
    */
   async postChatMessage(req, res, chatId) {
     let fields = await this.parseFormFields(req);
+    let userId = fields.userId;
+    let messageContent = fields.messageContent;
 
-    if (!chatId || !fields.userId || !fields.messageContent) {
+    if (
+      !chatId ||
+      !mongoose.Types.ObjectId.isValid(chatId) ||
+      !userId ||
+      !mongoose.Types.ObjectId.isValid(userId) ||
+      !messageContent
+    ) {
       res.writeHead(400);
       res.end();
       return;
     }
 
-    let chat = this.api.findChatById(chatId);
+    /**
+     * Find the specific chat in the database,
+     * with all its users.
+     */
+    let chat = await Chat.findById(chatId).populate("users");
 
     if (!chat) {
       res.writeHead(404);
@@ -410,37 +453,40 @@ module.exports = class Router {
       return;
     }
 
-    let chatUser = this.api.findChatUserById(chat, fields.userId);
+    /**
+     * Check whether the specific user
+     * is in the chat.
+     */
+    let user = chat.users.find(user => user._id.toString() === userId);
 
-    if (!chatUser) {
+    if (!user) {
       res.writeHead(404);
       res.end();
       return;
     }
 
-    let message = {
-      id: this.api.generateUuid(),
-      user: chatUser,
-      content: fields.messageContent,
-      sentAt: new Date().getTime()
-    };
+    let message = new Message({
+      content: messageContent,
+      chat: chat._id,
+      user: user._id
+    });
 
-    this.api.messages.push(message);
+    await message.save();
 
-    chat.messages.push(message);
+    message.user = user;
 
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(message));
+    res.end(message.toClientJSON());
 
     /** Emit to every websocket in the chat room that a message has just been posted. */
-    this.socket.io.to(chatId).emit("chatMessage", message);
+    this.socket.io.to(chatId).emit("chatMessage", message.toClientObject());
 
     /** Emit to every websocket in the chat room that a user has stopped typing. */
-    this.socket.io.to(chatId).emit("userStoppedTyping", chatUser);
+    this.socket.io.to(chatId).emit("userStoppedTyping", user.toClientObject());
   }
 
   /**
-   * After finding the specific chat and the specific user in memory, respond successfully
+   * After finding the specific chat and the specific user in the database, respond successfully
    * and emit to every websocket in the chat room that a user has started typing,
    * along with the said user.
    * If any form fields are missing, respond with 400.
@@ -451,14 +497,24 @@ module.exports = class Router {
    */
   async postChatUserTyping(req, res, chatId) {
     let fields = await this.parseFormFields(req);
+    let userId = fields.userId;
 
-    if (!chatId || !fields.userId) {
+    if (
+      !chatId ||
+      !mongoose.Types.ObjectId.isValid(chatId) ||
+      !userId ||
+      !mongoose.Types.ObjectId.isValid(userId)
+    ) {
       res.writeHead(400);
       res.end();
       return;
     }
 
-    let chat = this.api.findChatById(chatId);
+    /**
+     * Find the specific chat in the database,
+     * with all its users.
+     */
+    let chat = await Chat.findById(chatId).populate("users");
 
     if (!chat) {
       res.writeHead(404);
@@ -466,9 +522,13 @@ module.exports = class Router {
       return;
     }
 
-    let chatUser = this.api.findChatUserById(chat, fields.userId);
+    /**
+     * Check whether the specific user
+     * is in the chat.
+     */
+    let user = chat.users.find(user => user._id.toString() === userId);
 
-    if (!chatUser) {
+    if (!user) {
       res.writeHead(404);
       res.end();
       return;
@@ -478,11 +538,11 @@ module.exports = class Router {
     res.end();
 
     /** Emit to every websocket in the chat room that a user has started typing. */
-    this.socket.io.to(chatId).emit("userStartedTyping", chatUser);
+    this.socket.io.to(chatId).emit("userStartedTyping", user.toClientObject());
   }
 
   /**
-   * Create a new chat with a specific user as the owner, after finding the user in memory
+   * Create a new chat, after finding the user in the database
    * and respond with the said chat.
    * Finish by emitting to every websocket that a new chat has just been created, along with the said chat.
    * If any form fields are missing, respond with 400.
@@ -493,14 +553,16 @@ module.exports = class Router {
    */
   async createChat(req, res) {
     let fields = await this.parseFormFields(req);
+    let userId = fields.userId;
+    let chatName = fields.chatName;
 
-    if (!fields.userId || !fields.chatName) {
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId) || !chatName) {
       res.writeHead(400);
       res.end();
       return;
     }
 
-    let user = this.api.findUserById(fields.userId);
+    let user = await User.findById(userId);
 
     if (!user) {
       res.writeHead(404);
@@ -508,21 +570,16 @@ module.exports = class Router {
       return;
     }
 
-    let chat = {
-      id: this.api.generateUuid(),
-      name: fields.chatName,
-      owner: user,
-      users: [],
-      messages: [],
-      createdAt: new Date().getTime()
-    };
+    let chat = new Chat({
+      name: chatName
+    });
 
-    this.api.chats.push(chat);
+    await chat.save();
 
     res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(chat));
+    res.end(chat.toClientJSON());
 
     /** Emit to every websocket that a new chat has been created. */
-    this.socket.io.emit("chatCreated", chat);
+    this.socket.io.emit("chatCreated", chat.toClientObject());
   }
 };
