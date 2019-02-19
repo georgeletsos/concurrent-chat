@@ -76,7 +76,7 @@ module.exports = class ChatRouteManager extends RouteManager {
      */
     let chat = await Chat.findById(chatId).populate({
       path: "users",
-      options: { sort: { name: "asc" } }
+      options: { sort: { name: "asc", tag: "asc" } }
     });
 
     if (!chat) {
