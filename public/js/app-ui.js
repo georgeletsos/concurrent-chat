@@ -849,11 +849,12 @@ window.AppUi = (function() {
 
       $time.classList.add("ml-1", "text-sm", "text-grey-dark");
 
-      let today = dayjs(),
-        yesterday = today.subtract(1, "day"),
-        sentAt = dayjs(message.sentAt),
-        sentAtToTime = dayjs(message.sentAt).format("h:mm A"),
-        sentAtToDate = dayjs(message.sentAt).format("DD/MM/YYYY");
+      let today = dayjs();
+      let yesterday = today.subtract(1, "day");
+      let messageSentAt = message.createdAt;
+      let sentAt = dayjs(messageSentAt);
+      let sentAtToTime = dayjs(messageSentAt).format("h:mm A");
+      let sentAtToDate = dayjs(messageSentAt).format("DD/MM/YYYY");
 
       if (sentAt.isSame(today, "day")) {
         $time.textContent = `Today at ${sentAtToTime}`;
