@@ -1,3 +1,5 @@
+"use strict";
+
 const http = require("http");
 const Socket = require("./Socket");
 const mongoose = require("./Mongoose");
