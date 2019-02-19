@@ -3,13 +3,10 @@
 /* global importScripts io */
 
 /** List of chats in memory. */
-var chats;
-
-/** The current chat in memory. */
-var chat;
+let chats;
 
 /** List of users of the current chat in memory. */
-var chatUsers;
+let chatUsers;
 
 /**
  * List of users currently typing in memory.
@@ -17,7 +14,7 @@ var chatUsers;
  * @property {Object} typingUser.user The user currently typing.
  * @property {timeout} typingUser.timeout The user timeout that's going to remove the user from the list.
  */
-var typingUsers = [];
+let typingUsers = [];
 
 /**
  * Find a specific chat in memory.
@@ -251,14 +248,14 @@ function connectWebsocket(chatId, userId) {
   socket.on("connect", function() {
     let currentChat = findChatById(chatId);
 
-    if (currentChat) {
-      chat = currentChat;
-
-      postMessage({
-        socketEvent: "connect",
-        chatName: chat.name
-      });
+    if (!currentChat) {
+      return;
     }
+
+    postMessage({
+      socketEvent: "connect",
+      chatName: currentChat.name
+    });
   });
 
   /**
