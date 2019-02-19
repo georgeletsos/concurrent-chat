@@ -338,16 +338,10 @@ window.AppUi = (function() {
             /** Show the button text. */
             $buttonText.classList.remove("hidden");
 
-            /**
-             * If there was no error, then the problem should be elsewhere.
-             * Otherwise, show the validation message(s).
-             */
-            if (!error) {
-              console.error("Worker rejected promise with no payload");
-              return;
+            let errorUsername = error.username;
+            if (errorUsername) {
+              this._drawValidation(errorUsername, $input, $label, true);
             }
-
-            this._drawValidation(error.username, $input, $label);
           });
       }, 5e2);
     }
@@ -407,10 +401,22 @@ window.AppUi = (function() {
         .then(newChat => {
           /** After the new chat has been successfully created, redirect to the new chat. */
           location.href = `/${newChat.id}`;
-        });
+        })
+        .catch(error => {
+          let errorChatName = error.chatName;
+          if (errorChatName) {
+            let $label = $form.querySelector("label");
+            if (!$label) {
+              $label = document.createElement("label");
 
-      /** Clear the chat name field. */
-      $chatNameField.value = "";
+              $label.classList.add("mb-2", "block");
+
+              $form.prepend($label);
+            }
+
+            this._drawValidation(errorChatName, $chatNameField, $label);
+          }
+        });
     }
 
     /**
@@ -562,17 +568,23 @@ window.AppUi = (function() {
      * @param {String} validationMessage The validation error message to draw.
      * @param {Element} $input The input element.
      * @param {Element} $label The label element of the input element.
+     * @param {Boolean} drawHyphen Whether to draw a hyphen.
      */
-    _drawValidation(validationMessage, $input, $label) {
+    _drawValidation(validationMessage, $input, $label, drawHyphen = false) {
       $input.classList.add("border-red");
 
       $label.classList.add("text-red");
 
-      let $span = document.createElement("span");
+      let $span = $label.querySelector("[error-message]");
+      if ($span) {
+        return;
+      }
+
+      $span = document.createElement("span");
 
       $span.setAttribute("error-message", "");
 
-      $span.textContent = `- ${validationMessage}`;
+      $span.textContent = (drawHyphen ? "- " : "") + validationMessage;
 
       $span.classList.add("text-xs", "font-normal", "italic", "tracking-wide");
 
