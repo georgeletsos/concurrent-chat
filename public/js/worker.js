@@ -12,13 +12,13 @@ let chatUsers;
  * List of users currently typing in memory.
  * @property {Object[]} typingUser
  * @property {Object} typingUser.user The user currently typing.
- * @property {timeout} typingUser.timeout The user timeout that's going to remove the user from the list.
+ * @property {Timeout} typingUser.timeout The user timeout that's going to remove the user from the list.
  */
 let typingUsers = [];
 
 /**
  * Find a specific chat in memory.
- * @param {string} chatId The id of the specific chat.
+ * @param {String} chatId The id of the specific chat.
  * @returns {Object} The specific chat.
  */
 function findChatById(chatId) {
@@ -27,8 +27,8 @@ function findChatById(chatId) {
 
 /**
  * Find the index of a specific user in memory.
- * @param {string} userId The id of the specific user.
- * @returns {number} The index of the specific user.
+ * @param {String} userId The id of the specific user.
+ * @returns {Number} The index of the specific user.
  */
 function findChatUserIndexById(userId) {
   return chatUsers.findIndex(el => el.id === userId);
@@ -36,20 +36,21 @@ function findChatUserIndexById(userId) {
 
 /**
  * Find the index of a specific user currently typing in memory.
- * @param {string} userId The id of the specific user.
- * @returns {number} The index of the specific user.
+ * @param {String} userId The id of the specific user.
+ * @returns {Number} The index of the specific user.
  */
 function findTypingUserIndexById(userId) {
   return typingUsers.findIndex(el => el.user.id === userId);
 }
 
 /**
- * Alphabetically sorting algorithm for an object that has a `name` property.
+ * Alphabetically sorting algorithm for an object that has a `name`.
+ * If the name is the same then it sorts by the `tag` property instead.
  * @param {Object} a
- * @param {string} a.name
+ * @param {String} a.name
  * @param {Number} a.tag
  * @param {Object} b
- * @param {string} b.name
+ * @param {String} b.name
  * @param {Number} b.tag
  */
 function sortByNameAndTag(a, b) {
@@ -79,8 +80,8 @@ function sortByNameAndTag(a, b) {
 
 /**
  * Send HTTP requests to the API.
- * @param {string} method The HTTP method.
- * @param {string} path The request path.
+ * @param {String} method The HTTP method.
+ * @param {String} path The request path.
  * @param {Object} data Optional request payload.
  * @returns {Promise} A promise that is resolved or rejected depending on the HTTP status code of the response.
  */
@@ -152,7 +153,7 @@ function api(method, path, data) {
 
 /**
  * Register a new user, using the api function.
- * @param {string} [username=""] The username of the new user.
+ * @param {String} [username=""] The username of the new user.
  * @returns {Promise} A promise that is resolved with the new user, or rejected with validation message(s).
  */
 function registerUser(username = "") {
@@ -163,7 +164,7 @@ function registerUser(username = "") {
 
 /**
  * Login a user, using the api function.
- * @param {string} [userId=""] The id of the user.
+ * @param {String} [userId=""] The id of the user.
  * @returns {Promise} A promise that is resolved or rejected with no payload.
  */
 function loginUser(userId = "") {
@@ -182,8 +183,8 @@ function getChats() {
 
 /**
  * Create a new chat with a specific user as the owner, using the api function.
- * @param {string} [userId=""] The id of the specific user.
- * @param {string} [chatName=""] The name of the chat.
+ * @param {String} [userId=""] The id of the specific user.
+ * @param {String} [chatName=""] The name of the chat.
  * @returns {Promise} A promise that is resolved with the new chat.
  */
 function createChat(userId = "", chatName = "") {
@@ -195,7 +196,7 @@ function createChat(userId = "", chatName = "") {
 
 /**
  * Get the list of users for a specific chat, using the api function.
- * @param {string} [chatId=""] The id of the specific chat.
+ * @param {String} [chatId=""] The id of the specific chat.
  * @returns {Promise} A promise that is resolved with the list of users.
  */
 function getChatUsers(chatId = "") {
@@ -204,7 +205,7 @@ function getChatUsers(chatId = "") {
 
 /**
  * Get the list of messages for a specific chat, using the api function.
- * @param {string} [chatId=""] The id of the specific chat.
+ * @param {String} [chatId=""] The id of the specific chat.
  * @returns {Promise} A promise that is resolved with the list of messages.
  */
 function getChatMessages(chatId = "") {
@@ -213,9 +214,9 @@ function getChatMessages(chatId = "") {
 
 /**
  * Post a message of a specific user in a specific chat, using the api function.
- * @param {string} [chatId=""] The id of the specific chat.
- * @param {string} [userId=""] The id of the specific user.
- * @param {string} [messageContent=""] The message content.
+ * @param {String} [chatId=""] The id of the specific chat.
+ * @param {String} [userId=""] The id of the specific user.
+ * @param {String} [messageContent=""] The message content.
  * @returns {Promise} A promise that is resolved with the message.
  */
 function postChatMessage(chatId = "", userId = "", messageContent = "") {
@@ -227,8 +228,8 @@ function postChatMessage(chatId = "", userId = "", messageContent = "") {
 
 /**
  * Send a signal that a specific user has started typing in a specific chat, using the api function.
- * @param {string} [chatId=""] The id of the specific chat.
- * @param {string} [userId=""] The id of the specific user.
+ * @param {String} [chatId=""] The id of the specific chat.
+ * @param {String} [userId=""] The id of the specific user.
  * @returns {Promise} A promise that is resolved or rejected with no payload.
  */
 function typing(chatId = "", userId = "") {
@@ -240,8 +241,8 @@ function typing(chatId = "", userId = "") {
 /**
  * Open a websocket connection between the user and the chat.
  * Also set any websocket event listeners.
- * @param {string} chatId The id of the chat.
- * @param {string} userId The id of the user.
+ * @param {String} chatId The id of the chat.
+ * @param {String} userId The id of the user.
  */
 function connectWebsocket(chatId, userId) {
   /** Load the Socket.io script into the worker. */

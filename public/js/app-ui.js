@@ -243,7 +243,7 @@ window.AppUi = (function() {
 
     /**
      * Set the title of the page.
-     * @param {string} chatName
+     * @param {String} chatName
      */
     setTitle(chatName) {
       document.title = `#${chatName}`;
@@ -251,7 +251,7 @@ window.AppUi = (function() {
 
     /**
      * Set the placeholder of the message input.
-     * @param {string} chatName
+     * @param {String} chatName
      */
     setMessagePlaceholder(chatName) {
       this._$messageFormField.setAttribute(
@@ -262,7 +262,7 @@ window.AppUi = (function() {
 
     /**
      * @param {Element} $element The element in question.
-     * @returns {number} The sum of `scrollTop` and `clientHeight` properties of the `$element`.
+     * @returns {Number} The sum of `scrollTop` and `clientHeight` properties of the `$element`.
      */
     _getElementScrollClient($element) {
       return Math.ceil($element.scrollTop + $element.clientHeight);
@@ -271,9 +271,9 @@ window.AppUi = (function() {
     /**
      * Check if the user is currently scrolling on an element, by using the `scrollClient` and `scrollHeight` properties of the element.
      * Doesn't always use the current values of the above properties of the element, in case something has been added to the element in between.
-     * @param {number} scrollClient The scrollClient property of the element.
-     * @param {number} scrollHeight The scrollHeight property of the element.
-     * @returns {Boolean} True or false.
+     * @param {Number} scrollClient The scrollClient property of the element.
+     * @param {Number} scrollHeight The scrollHeight property of the element.
+     * @returns {Boolean}
      */
     _isUserCurrentlyScrolling(scrollClient, scrollHeight) {
       /** Deviation of 5px */
@@ -482,8 +482,8 @@ window.AppUi = (function() {
     /**
      * Show the pulsing dots and draw a list of users currently typing, next to the pulsing dots.
      * @param {Object[]} typingUsers The list of users currently typing.
-     * @param {string} typingUsers[].name The name of a user currently typing.
-     * @param {number} typingUsers[].tag The tag of a user currently typing.
+     * @param {String} typingUsers[].name The name of a user currently typing.
+     * @param {Number} typingUsers[].tag The tag of a user currently typing.
      */
     drawTypingUsers(typingUsers) {
       /** Start by clearing the list of users currently typing of the UI. */
@@ -559,7 +559,7 @@ window.AppUi = (function() {
     /**
      * Draw a validation error message on the `$label`
      * and add the error border to the `$input`.
-     * @param {string} validationMessage The validation error message to draw.
+     * @param {String} validationMessage The validation error message to draw.
      * @param {Element} $input The input element.
      * @param {Element} $label The label element of the input element.
      */
@@ -599,8 +599,8 @@ window.AppUi = (function() {
     /**
      * Draw `user` info on the UI.
      * @param {Object} user The user object.
-     * @param {string} user.name The name of the user.
-     * @param {number} user.tag The tag of the user.
+     * @param {String} user.name The name of the user.
+     * @param {Number} user.tag The tag of the user.
      */
     _drawCurrentUserInfo(user) {
       this._$myUsername.textContent = user.name;
@@ -610,8 +610,8 @@ window.AppUi = (function() {
     /**
      * Draw a list of `chats` on the UI.
      * @param {Object[]} chats A list of chats.
-     * @param {string} chats[].id The id of the chat.
-     * @param {string} chats[].name The name of the chat.
+     * @param {String} chats[].id The id of the chat.
+     * @param {String} chats[].name The name of the chat.
      */
     drawChats(chats) {
       for (let chat of chats) {
@@ -662,8 +662,8 @@ window.AppUi = (function() {
     /**
      * Draw a welcome message for the `user` on the UI.
      * @param {Object} user The user to say welcome to.
-     * @param {string} user.name The name of the user.
-     * @param {string} user.tag The tag of the user.
+     * @param {String} user.name The name of the user.
+     * @param {String} user.tag The tag of the user.
      */
     drawWelcomeMessage(user) {
       /**
@@ -736,8 +736,8 @@ window.AppUi = (function() {
     /**
      * Draw a goodbye message for the `user` on the UI.
      * @param {Object} user The user to say goodbye to.
-     * @param {string} user.name The name of the user.
-     * @param {string} user.tag The tag of the user.
+     * @param {String} user.name The name of the user.
+     * @param {String} user.tag The tag of the user.
      */
     drawGoodbyeMessage(user) {
       /**
@@ -811,9 +811,9 @@ window.AppUi = (function() {
     /**
      * Draw a list of `messages` on the UI.
      * @param {Object[]} messages A list of messages.
-     * @param {string} messages[].user The user that sent the message.
-     * @param {string} messages[].content The content of the message.
-     * @param {string} messages[].sentAt The timestamp when the message was sent.
+     * @param {String} messages[].user The user that sent the message.
+     * @param {String} messages[].content The content of the message.
+     * @param {String} messages[].sentAt The timestamp when the message was sent.
      */
     drawMessages(messages) {
       /**
@@ -907,9 +907,9 @@ window.AppUi = (function() {
     /**
      * Create an element that houses a `user`.
      * @param {Object} user The user.
-     * @param {string} user.id The id of the user.
-     * @param {string} user.name The name of the user.
-     * @param {number} user.tag The tag of the user.
+     * @param {String} user.id The id of the user.
+     * @param {String} user.name The name of the user.
+     * @param {Number} user.tag The tag of the user.
      * @returns {Element} The element.
      */
     _createUserEl(user) {

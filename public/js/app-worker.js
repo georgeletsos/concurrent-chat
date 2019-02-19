@@ -8,7 +8,7 @@ window.AppWorker = (function() {
     constructor() {
       /**
        * Unique id generator function.
-       * @yields {number} A unique id.
+       * @yields {Number} A unique id.
        */
       this._generateId = function*() {
         let id = 0;
