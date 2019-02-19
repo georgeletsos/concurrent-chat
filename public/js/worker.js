@@ -47,18 +47,30 @@ function findTypingUserIndexById(userId) {
  * Alphabetically sorting algorithm for an object that has a `name` property.
  * @param {Object} a
  * @param {string} a.name
+ * @param {Number} a.tag
  * @param {Object} b
  * @param {string} b.name
+ * @param {Number} b.tag
  */
-function sortByName(a, b) {
-  a = a.name.toLowerCase();
-  b = b.name.toLowerCase();
+function sortByNameAndTag(a, b) {
+  let aName = a.name.toLowerCase();
+  let aTag = a.tag;
+  let bName = b.name.toLowerCase();
+  let bTag = b.tag;
 
-  if (a < b) {
+  if (aName < bName) {
     return -1;
   }
 
-  if (a > b) {
+  if (aName > bName) {
+    return 1;
+  }
+
+  if (aTag < bTag) {
+    return -1;
+  }
+
+  if (aTag > bTag) {
     return 1;
   }
 
@@ -268,7 +280,7 @@ function connectWebsocket(chatId, userId) {
   socket.on("userConnected", function(user) {
     chatUsers.push(user);
 
-    chatUsers.sort(sortByName);
+    chatUsers.sort(sortByNameAndTag);
 
     let userIndex = findChatUserIndexById(user.id),
       nextUser;
