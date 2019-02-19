@@ -269,6 +269,13 @@ module.exports = class ChatRouteManager extends RouteManager {
       return;
     }
 
+    let existingChat = await Chat.findOne({ name: chatName });
+    if (existingChat) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ chatName: "Chat already exists" }));
+      return;
+    }
+
     let user = await User.findById(userId);
 
     if (!user) {
