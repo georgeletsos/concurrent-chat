@@ -86,6 +86,21 @@ chatSchema.statics.createGeneralChatIfNotExists = async function() {
   }
 };
 
+/**
+ * Remove the Users from every Chat.
+ * Usually being called when the Server starts/restarts.
+ * @async
+ */
+chatSchema.statics.clearChatsFromUsers = async function() {
+  try {
+    await Chat.updateMany({ users: { $ne: [] } }, { users: [] });
+
+    console.log("Chats were cleared from Users successfully!");
+  } catch (error) {
+    console.log("Clearing Chats from Users error", error);
+  }
+};
+
 const Chat = Mongoose.model("Chat", chatSchema);
 
 module.exports = Chat;

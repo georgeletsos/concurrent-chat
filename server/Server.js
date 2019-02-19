@@ -14,7 +14,10 @@ module.exports = class Server {
     mongoose.connect().then(async () => {
       console.log("Connected to MongoDB");
 
-      await Chat.createGeneralChatIfNotExists();
+      await Promise.all([
+        Chat.createGeneralChatIfNotExists(),
+        Chat.clearChatsFromUsers()
+      ]);
 
       this.socket = new Socket(mongoose);
 
