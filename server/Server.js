@@ -7,6 +7,7 @@ const StaticRouteManager = require("./routes/StaticRouteManager");
 const AuthRouteManager = require("./routes/AuthRouteManager");
 const ChatRouteManager = require("./routes/api/ChatRouteManager");
 const Chat = require("./models/Chat");
+const Message = require("./models/Message");
 
 /** Class representing our Server implementation. */
 module.exports = class Server {
@@ -63,6 +64,20 @@ module.exports = class Server {
       /** Connect the socket to this server. */
       await this.socket.connect(this.server);
 
+      let now = new Date().getTime();
+      /** Day(s) * Hour(s) * Minute(s) * Second(s) * 1000 */
+      let twoWeeksInmSeconds = 14 * 24 * 60 * 60 * 1e3;
+      let twoWeeksAgo = new Date(now - twoWeeksInmSeconds);
+      await this.deleteMessagesAndUnusedChatsSince(twoWeeksAgo);
+
+      /**
+       * Setup the mechanism to delete Messages and unused Chats
+       * every 2 weeks.
+       */
+      setInterval(() => {
+        this.deleteMessagesAndUnusedChatsSince();
+      }, twoWeeksInmSeconds);
+
       this.port = process.env.PORT || 8080;
 
       /** Start the server listening for connections. */
@@ -70,6 +85,98 @@ module.exports = class Server {
         console.log(`Server running on port ${this.port}`);
       });
     });
+  }
+
+  /**
+   * Delete Messages and unused Chats that are older than `sinceDate`, except #general-chat.
+   *   Start by deleting Messages that are older than `sinceDate`.
+   *   Then count the remaining Messages for every Chat, other than #general-chat.
+   *   If any Chat doesn't have Messages anymore, look up whether that Chat was created before `sinceDate`.
+   *   If so, then delete that Chat.
+   *   Otherwise, leave it be.
+   * @param {Date} sinceDate
+   */
+  async deleteMessagesAndUnusedChatsSince(sinceDate) {
+    let chats = await Chat.find();
+    for (let chat of chats) {
+      /** Delete Messages of Chat that are old. */
+      let { n, ok } = await Message.deleteMany({
+        chat: chat.id,
+        createdAt: { $lte: sinceDate }
+      });
+
+      if (ok !== 1) {
+        console.log("Deleting old messages of Chat", chat.name, "error", ok);
+        continue;
+      }
+
+      if (n > 0) {
+        console.log(
+          "Deleted",
+          n,
+          "old messages of Chat",
+          chat.name,
+          "successfully!"
+        );
+      }
+
+      /** If #general-chat, stop here. */
+      if (chat.name === "general-chat") {
+        continue;
+      }
+
+      /** Otherwise, count the remaining Messages of Chat. */
+      Message.countDocuments({
+        chat: chat.id
+      }).then((count, err) => {
+        if (err) {
+          console.log(
+            "Count remaining Messages of Chat",
+            chat.name,
+            "error",
+            err
+          );
+          return;
+        }
+
+        if (count > 0) {
+          console.log(
+            "Chat",
+            chat.name,
+            "still has",
+            count,
+            "Messages remaining!"
+          );
+          return;
+        }
+
+        /**
+         * If the Chat has no Messages now:
+         *   Look up whether the Chat is old.
+         *   And if so, delete that Chat.
+         */
+        let chatCreationTimestamp = new Date(chat.createdAt).getTime();
+        if (chatCreationTimestamp > sinceDate.getTime()) {
+          return;
+        }
+
+        chat.remove(function(err, chat) {
+          if (err) {
+            console.log(
+              "Deleting old Chat",
+              chat.name,
+              "without messages error",
+              err
+            );
+          }
+          console.log(
+            "Deleted old Chat",
+            chat.name,
+            "without messages successfully!"
+          );
+        });
+      });
+    }
   }
 
   /**
