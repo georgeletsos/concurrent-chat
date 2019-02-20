@@ -37,7 +37,7 @@ userSchema.methods.toClientJSON = function() {
  * @returns {User}
  */
 userSchema.statics.getLatestUser = function() {
-  return this.findOne().sort({ createdAt: -1 });
+  return this.findOne().sort({ createdAt: "desc" });
 };
 
 const User = Mongoose.model("User", userSchema);
