@@ -16,8 +16,8 @@ const chatSchema = new Mongoose.Schema(
 );
 
 /**
- * Transform the output of `toObject` further, as to send to client only the info it needs.
- * @returns {Object} A Chat with the only info that we need to show to the client.
+ * Transform the output of `toObject` further, as to send to client only the info needed.
+ * @returns {Object} A chat with the only info that's needed to show to the client.
  */
 chatSchema.methods.toClientObject = function() {
   return this.toObject({
@@ -39,9 +39,9 @@ chatSchema.methods.toClientJSON = function() {
 };
 
 /**
- * Transform the output of `toObject` further, as to send to client only the info it needs.
+ * Transform the output of `toObject` further, as to send to client only the info needed.
  * Include the users this time.
- * @returns {Object} A Chat with the only info that we need to show to the client, including the users this time.
+ * @returns {Object} A chat with the only info that's needed to show to the client, including the users this time.
  */
 chatSchema.methods.toClientObjectWithUsers = function() {
   return this.toObject({
@@ -68,7 +68,7 @@ chatSchema.methods.toClientJSONWithUsers = function() {
 };
 
 /**
- * Try creating the `#general-chat` after determining if it already exists first.
+ * Create the `#general-chat`, after determining that it doesn't exist.
  * @async
  */
 chatSchema.statics.createGeneralChatIfNotExists = async function() {
@@ -87,7 +87,7 @@ chatSchema.statics.createGeneralChatIfNotExists = async function() {
 };
 
 /**
- * Remove the Users from every Chat.
+ * Remove any users from every chat.
  * Usually being called when the Server starts/restarts.
  * @async
  */

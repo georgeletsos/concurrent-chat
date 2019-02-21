@@ -20,8 +20,8 @@ const messageSchema = new Mongoose.Schema(
 );
 
 /**
- * Transform the output of `toObject` further, as to send to client only the info it needs.
- * @returns {Object} A Message with the only info that we need to show to the client.
+ * Transform the output of `toObject` further, as to send to client only the info needed.
+ * @returns {Object} A message with the only info that's needed to show to the client.
  */
 messageSchema.methods.toClientObject = function() {
   return this.toObject({

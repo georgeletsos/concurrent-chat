@@ -36,7 +36,7 @@ module.exports = class StaticRouteManager extends RouteManager {
   }
 
   /**
-   * Stream a  file.
+   * Stream a static file.
    * @param {Response} res The HTTP response.
    * @param {String} filePath The file and its parent folder.
    */

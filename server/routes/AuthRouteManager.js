@@ -28,6 +28,7 @@ module.exports = class AuthRouteManager extends RouteManager {
    * If any form fields are missing, respond with 400 and any validation message(s).
    * @param {Request} req The HTTP request.
    * @param {Response} res The HTTP response.
+   * @async
    */
   async registerUser(req, res) {
     let fields = await this.parseFormFields(req);
@@ -57,9 +58,10 @@ module.exports = class AuthRouteManager extends RouteManager {
   /**
    * Log a user in to the API, after finding the user in the database.
    * If any form fields are missing, respond with 400.
-   * If the user was not found in memory, respond with 404.
+   * If the user was not found, respond with 404.
    * @param {Request} req The HTTP request.
    * @param {Response} res The HTTP response.
+   * @async
    */
   async loginUser(req, res) {
     let fields = await this.parseFormFields(req);

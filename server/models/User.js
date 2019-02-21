@@ -9,8 +9,8 @@ const userSchema = new Mongoose.Schema(
 );
 
 /**
- * Transform the output of `toObject` further, as to send to client only the info it needs.
- * @returns {Object} A User with the only info that we need to show to the client.
+ * Transform the output of `toObject` further, as to send to client only the info needed.
+ * @returns {Object} A user with the only info that's needed to show to the client.
  */
 userSchema.methods.toClientObject = function() {
   return this.toObject({
@@ -33,7 +33,7 @@ userSchema.methods.toClientJSON = function() {
 };
 
 /**
- * Find the most recently added User.
+ * Find the most recently added user.
  * @returns {User}
  */
 userSchema.statics.getLatestUser = function() {

@@ -8,17 +8,18 @@ class Mongoose extends mongoose {
   }
 
   /**
-   * Connect to MongoDB
-   * @async
+   * Opens the default mongoose connection.
+   * Options passed take precedence over options included in connection strings.
+   * @returns pseudo-promise wrapper around this
    */
-  async connect() {
-    super.connect(mongoUrl, {
+  connect() {
+    return super.connect(mongoUrl, {
       useNewUrlParser: true
     });
   }
 
   /**
-   * Check if given id is a valid MongoDB ObjectId.
+   * Check if given `id` is a valid MongoDB ObjectId.
    * @param {String} id
    * @returns {Boolean}
    */

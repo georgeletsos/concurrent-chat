@@ -45,6 +45,7 @@ module.exports = class ChatRouteManager extends RouteManager {
   /**
    * Get the list of chats from the database and respond with the said list.
    * @param {Response} res The HTTP response.
+   * @async
    */
   async getChats(res) {
     let chats = await Chat.find();
@@ -59,9 +60,10 @@ module.exports = class ChatRouteManager extends RouteManager {
    * Get the list of users of a specific chat, after finding the chat in the database
    * and respond with the said list.
    * If any form fields are missing, respond with 400.
-   * If the chat was not found in memory, respond with 404.
+   * If the chat was not found, respond with 404.
    * @param {Response} res The HTTP response.
    * @param {String} chatId The id of the specific chat.
+   * @async
    */
   async getChatUsers(res, chatId) {
     if (!chatId || !this.mongoose.isValidObjectId(chatId)) {
@@ -72,7 +74,7 @@ module.exports = class ChatRouteManager extends RouteManager {
 
     /**
      * Find the specific chat in the database, with all its users.
-     * Also sort the users alphabetically.
+     * Also sort the users alphabetically, followed by tag.
      */
     let chat = await Chat.findById(chatId).populate({
       path: "users",
@@ -95,9 +97,10 @@ module.exports = class ChatRouteManager extends RouteManager {
    * Get the list of messages of a specific chat, after finding the chat in the database
    * and respond with the said list.
    * If any form fields are missing, respond with 400.
-   * If the chat was not found in memory, respond with 404.
+   * If the chat was not found, respond with 404.
    * @param {Response} res The HTTP response.
    * @param {String} chatId The id of the specific chat.
+   * @async
    */
   async getChatMessages(res, chatId) {
     if (!chatId || !this.mongoose.isValidObjectId(chatId)) {
@@ -107,8 +110,8 @@ module.exports = class ChatRouteManager extends RouteManager {
     }
 
     /**
-     * Find all the messages of the specific chats,
-     * along with the users.
+     * Find all the messages of the specific chat,
+     * along with the users who sent them.
      */
     let messages = await Message.find({ chat: chatId }).populate("user");
 
@@ -126,10 +129,11 @@ module.exports = class ChatRouteManager extends RouteManager {
    * Finish by emitting to every websocket in the chat room that a user has stopped typing,
    * along with the said user.
    * If any form fields are missing, respond with 400.
-   * If the chat or the user was not found in memory, respond with 404.
+   * If the chat or the user was not found, respond with 404.
    * @param {Request} req The HTTP request.
    * @param {Response} res The HTTP response.
    * @param {String} chatId The id of the specific chat.
+   * @async
    */
   async postChatMessage(req, res, chatId) {
     let fields = await this.parseFormFields(req);
@@ -193,14 +197,14 @@ module.exports = class ChatRouteManager extends RouteManager {
   }
 
   /**
-   * After finding the specific chat and the specific user in the database, respond successfully
-   * and emit to every websocket in the chat room that a user has started typing,
-   * along with the said user.
+   * Emit to every websocket in the chat room that a user has started typing, along with the said user,
+   * after finding the specific chat and the specific user in the database.
    * If any form fields are missing, respond with 400.
-   * If the chat or the user was not found in memory, respond with 404.
+   * If the chat or the user was not found, respond with 404.
    * @param {Request} req The HTTP request.
    * @param {Response} res The HTTP response.
    * @param {String} chatId The id of the specific chat.
+   * @async
    */
   async postChatUserTyping(req, res, chatId) {
     let fields = await this.parseFormFields(req);
@@ -249,14 +253,14 @@ module.exports = class ChatRouteManager extends RouteManager {
   }
 
   /**
-   * Create a new chat, after finding the user in the database
-   * and respond with the said chat.
+   * Create a new chat with a unique name, after finding the user in the database and respond with the said chat.
    * Finish by emitting to every websocket that a new chat has just been created, along with the said chat.
-   * If any form fields are missing, respond with 400.
-   * If the user was not found in memory, respond with 404.
+   * If any form fields are missing or a chat with that name already exists, respond with 400 and any validation message(s).
+   * If the user was not found, respond with 404.
    * @param {Request} req The HTTP request.
    * @param {Response} res The HTTP response.
    * @param {String} chatId The id of the specific chat.
+   * @async
    */
   async createChat(req, res) {
     let fields = await this.parseFormFields(req);

@@ -29,11 +29,12 @@ module.exports = class Socket {
    * Add the websocket to the room of the specific chat.
    * Emit to every websocket in the chat room that the user has just been connected.
    * Finally listen on the disconnection event:
-   *   when the user has been disconnected, remove the user from the list of users of the chat
+   *   When the user has been disconnected, remove the user from the list of users of the chat
    *   and emit to every websocket in chat the room that the user has been disconnected.
    * @param {Object} socket The connected websocket.
-   * @param {string} socket.chatId The specific chat id.
-   * @param {string} socket.userId The specific user id.
+   * @param {String} socket.chatId The specific chat id.
+   * @param {String} socket.userId The specific user id.
+   * @async
    */
   async onConnect(socket) {
     let chatId = socket.handshake.query.chatId,
@@ -66,7 +67,7 @@ module.exports = class Socket {
     /** Add the websocket to the room of the chat. */
     socket.join(chatId);
 
-    /** Emit to every websocket in the chat room, that the user has been connected. */
+    /** Emit to every websocket in the chat room that the user has been connected. */
     this.io.to(chatId).emit("userConnected", user.toClientObject());
 
     /** Listen on the disconnection event. */
@@ -81,7 +82,7 @@ module.exports = class Socket {
         await chat.save();
       }
 
-      /** Emit to every websocket in the chat room, that the user has been disconnected. */
+      /** Emit to every websocket in the chat room that the user has been disconnected. */
       this.io.to(chatId).emit("userDisconnected", user.toClientObject());
     });
   }
