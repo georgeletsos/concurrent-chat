@@ -5,7 +5,7 @@ const Formidable = require("formidable");
 module.exports = class RouteManager {
   /**
    * @param {Mongoose} mongoose Our mongoose instance.
-   * @param {Socket} socket Our mongoose instance.
+   * @param {Socket} socket Our socket instance.
    */
   constructor(mongoose, socket) {
     this.mongoose = mongoose;

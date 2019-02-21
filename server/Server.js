@@ -40,9 +40,9 @@ module.exports = class Server {
       /**
        * Create the server.
        * The callback iterates over the `routes` array while checking if the request url matches the RegExp.
-       * If the request url matched, check first if the request method matches.
-       * If the request method also matched, just run the route handler.
-       * Otherwise, stream the home/index route instead.
+       * If the request url matched, check first if the request method matches:
+       *   If the request method also matched, simply run the route handler.
+       *   Otherwise, stream the home/index route instead.
        */
       this.server = http.createServer((req, res) => {
         for (let route of this.routes) {
@@ -66,17 +66,17 @@ module.exports = class Server {
 
       let now = new Date().getTime();
       /** Day(s) * Hour(s) * Minute(s) * Second(s) * 1000 */
-      let twoWeeksInmSeconds = 14 * 24 * 60 * 60 * 1e3;
-      let twoWeeksAgo = new Date(now - twoWeeksInmSeconds);
+      let twoWeeksInMilliSeconds = 14 * 24 * 60 * 60 * 1e3;
+      let twoWeeksAgo = new Date(now - twoWeeksInMilliSeconds);
       await this.deleteMessagesAndUnusedChatsSince(twoWeeksAgo);
 
       /**
-       * Setup the mechanism to delete Messages and unused Chats
+       * Setup the mechanism to delete messages and unused chats
        * every 2 weeks.
        */
       setInterval(() => {
         this.deleteMessagesAndUnusedChatsSince();
-      }, twoWeeksInmSeconds);
+      }, twoWeeksInMilliSeconds);
 
       this.port = process.env.PORT || 8080;
 
@@ -88,18 +88,18 @@ module.exports = class Server {
   }
 
   /**
-   * Delete Messages and unused Chats that are older than `sinceDate`, except #general-chat.
-   *   Start by deleting Messages that are older than `sinceDate`.
-   *   Then count the remaining Messages for every Chat, other than #general-chat.
-   *   If any Chat doesn't have Messages anymore, look up whether that Chat was created before `sinceDate`.
-   *   If so, then delete that Chat.
-   *   Otherwise, leave it be.
+   * Delete messages and unused chats that are older than `sinceDate`, except #general-chat.
+   *   Start by deleting messages that are older than `sinceDate`.
+   *   Then count the remaining messages for every chat, other than #general-chat.
+   *   If any chat doesn't have messages anymore, look up whether that chat was created before `sinceDate`.
+   *   If so, then delete that chat.
    * @param {Date} sinceDate
+   * @async
    */
   async deleteMessagesAndUnusedChatsSince(sinceDate) {
     let chats = await Chat.find();
     for (let chat of chats) {
-      /** Delete Messages of Chat that are old. */
+      /** Delete messages of chat that are old. */
       let { n, ok } = await Message.deleteMany({
         chat: chat.id,
         createdAt: { $lte: sinceDate }
@@ -125,13 +125,13 @@ module.exports = class Server {
         continue;
       }
 
-      /** Otherwise, count the remaining Messages of Chat. */
+      /** Otherwise, count the remaining messages of chat... */
       Message.countDocuments({
         chat: chat.id
       }).then((count, err) => {
         if (err) {
           console.log(
-            "Count remaining Messages of Chat",
+            "Count remaining messages of Chat",
             chat.name,
             "error",
             err
@@ -151,9 +151,9 @@ module.exports = class Server {
         }
 
         /**
-         * If the Chat has no Messages now:
-         *   Look up whether the Chat is old.
-         *   And if so, delete that Chat.
+         * If the chat has no messages now:
+         *   Look up whether the chat is old.
+         *   And if so, delete that chat.
          */
         let chatCreationTimestamp = new Date(chat.createdAt).getTime();
         if (chatCreationTimestamp > sinceDate.getTime()) {
