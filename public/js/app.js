@@ -19,7 +19,6 @@ onDocumentReady(function() {
   if (!AppUi.user) {
     /** Finish here by showing the register user UI. */
     AppUi.$registerContainer.classList.remove("hidden");
-
     return;
   }
 

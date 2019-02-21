@@ -20,27 +20,27 @@ window.AppWorker = (function() {
 
       /**
        * Global id generator.
-       * We need these ids to map tasks executed by web workers to the larger
+       * These ids are used to map tasks executed by web workers to the larger
        * operation that created them.
        */
       this._idGenerator = this._generateId();
 
       /**
        * Resolver and rejector functions from promises.
-       * As results come back from web workers, we look them up here based on the id.
+       * As results come back from web workers, they are being looked up here based on the id.
        */
       this._resolvers = {};
       this._rejectors = {};
 
       /**
-       * The original implementation of postMessage().
-       * We are going to need to call it later on, inside our custom implementation.
+       * The original implementation of `postMessage()`.
+       * There will be a need to call it later on, inside our custom implementation.
        */
       this._postMessage = Worker.prototype.postMessage;
 
       /**
        * A reference to this AppWorker.
-       * We are going to need to use it later, inside a closure.
+       * There will be a need to use it later on, inside a closure.
        */
       const thisAppWorker = this;
 
@@ -58,7 +58,7 @@ window.AppWorker = (function() {
           thisAppWorker._rejectors[msgId] = reject;
 
           /**
-           * Run the original web worker postMessage() implementation,
+           * Run the original web worker `postMessage()` implementation,
            * which takes care of actually posting the message to the web worker thread.
            */
           thisAppWorker._postMessage.call(
@@ -131,8 +131,8 @@ window.AppWorker = (function() {
         /**
          * Otherwise...
          * If the e.data object has an error property,
-         * look up the rejector function and call it with the e.data.error.
-         * Else, look up the resolver function and call it with the e.data.data.
+         * look up the rejector function and call it with the `e.data.error`.
+         * Else, look up the resolver function and call it with the `e.data.data`.
          */
         let source = e.data.hasOwnProperty("error")
             ? this._rejectors

@@ -67,10 +67,13 @@ window.AppUi = (function() {
       this._$users = document.getElementById("users");
     }
 
-    /** Initialize the app UI, by showing the DOM component, adding event handlers and making API calls. */
+    /**
+     * Initialize the app UI, by showing the DOM component, adding event handlers and making API calls.
+     * @async
+     */
     async initApp() {
-      /** Wait for the current user to successfully log in to the API... */
       try {
+        /** Wait for the current user to successfully log in to the API... */
         await AppWorker.api.postMessage({
           action: "loginUser",
           userId: this.user.id
@@ -113,7 +116,7 @@ window.AppUi = (function() {
         action: "getChats"
       });
 
-      /** Then draw the list of chats on the UI. */
+      /** Then draw the list of chats in the UI. */
       this.drawChats(chats);
 
       /** And show the container of the list of chats. */
@@ -121,7 +124,7 @@ window.AppUi = (function() {
 
       /** If there's no chat id in the page URL... */
       if (!this._chatId) {
-        /** Remove the container of the no chat message. */
+        /** Remove the container of the no-chat message. */
         this._$noChatContainer.parentNode.removeChild(this._$noChatContainer);
 
         /** Remove the container of messages. */
@@ -134,7 +137,6 @@ window.AppUi = (function() {
 
         /** Finish here by showing the container of instructions. */
         this._$instructionsContainer.classList.remove("hidden");
-
         return;
       }
 
@@ -153,17 +155,16 @@ window.AppUi = (function() {
           /** Remove the container of users. */
           this._$usersContainer.parentNode.removeChild(this._$usersContainer);
 
-          /** Show the container of the no chat message. */
+          /** Show the container of the no-chat message. */
           this._$noChatContainer.classList.remove("hidden");
 
           /** Finish here by showing the container of instructions. */
           this._$instructionsContainer.classList.remove("hidden");
-
           return;
         }
       }
 
-      /** Otherwise, remove the container of the no chat message. */
+      /** Otherwise, remove the container of the no-chat message. */
       this._$noChatContainer.parentNode.removeChild(this._$noChatContainer);
 
       /** Remove the container of instructions. */
@@ -178,7 +179,7 @@ window.AppUi = (function() {
           chatId: this._chatId
         })
         .then(users => {
-          /** Then draw the list of users on the UI. */
+          /** Then draw the list of users in the UI. */
           this.drawUsers(users);
 
           /** And show the container of the list of users. */
@@ -224,12 +225,12 @@ window.AppUi = (function() {
 
           /**
            * Focus on the message input.
-           * (When the code reaches here right after registering a new User,
+           * (When the code reaches here right after registering a new user,
            * we need to redirect the focus.)
            */
           this._$messageFormField.focus();
 
-          /** Finally draw the list of messages on the UI. */
+          /** Finally draw the list of messages in the UI. */
           this.drawMessages(messages);
         });
 
@@ -261,6 +262,7 @@ window.AppUi = (function() {
     }
 
     /**
+     * Calculate the sum of `scrollTop` and `clientHeight` properties of the `$element`.
      * @param {Element} $element The element in question.
      * @returns {Number} The sum of `scrollTop` and `clientHeight` properties of the `$element`.
      */
@@ -270,20 +272,19 @@ window.AppUi = (function() {
 
     /**
      * Check if the user is currently scrolling on an element, by using the `scrollClient` and `scrollHeight` properties of the element.
-     * Doesn't always use the current values of the above properties of the element, in case something has been added to the element in between.
      * @param {Number} scrollClient The scrollClient property of the element.
      * @param {Number} scrollHeight The scrollHeight property of the element.
      * @returns {Boolean}
      */
     _isUserCurrentlyScrolling(scrollClient, scrollHeight) {
-      /** Deviation of 5px */
+      /** Deviation of 5px. */
       return Math.abs(scrollClient - scrollHeight) > 5;
     }
 
     /**
      * Register a new user by making an API call.
      * If successful, save the new user to local storage and show the app UI.
-     * If not successful, show validation error(s).
+     * If not successful, show any validation error(s).
      * Also show/hide the loading animation on the button.
      * @param {Event} e The event that took place.
      */
@@ -307,18 +308,18 @@ window.AppUi = (function() {
 
       /** Give the pulsing dots half a second... (Doesn't look nice if it's too fast) */
       setTimeout(() => {
-        /** Make an API call to register a new User... */
+        /** Make an API call to register a new user... */
         AppWorker.api
           .postMessage({
             action: "registerUser",
             username: username
           })
-          /** If a new User was registered successfully... */
+          /** If a new user was registered successfully... */
           .then(user => {
-            /** Save the User in local storage. */
+            /** Save the user in local storage. */
             localStorage.setItem("user", JSON.stringify(user));
 
-            /** Update the current User. */
+            /** Update the current user. */
             this.user = user;
 
             /** Hide the pulsing dots. */
@@ -330,7 +331,7 @@ window.AppUi = (function() {
             /** Finally initialize the app UI. */
             this.initApp();
           })
-          /** If a new User couldn't get registered successfully... */
+          /** If a new user couldn't get registered successfully... */
           .catch(error => {
             /** Hide the pulsing dots. */
             $buttonPulsingDots.classList.add("hidden");
@@ -375,8 +376,9 @@ window.AppUi = (function() {
     }
 
     /**
-     * Event handler that takes care of creating a new chat with the current user as the owner, by making an API call.
-     * After the new chat has been successfully created, redirect to the new chat.
+     * Event handler that takes care of creating a new chat with a unique name, by making an API call.
+     * If successful, redirect to the new chat.
+     * If not successful, show any validation error(s).
      * @param {Event} e The event that took place.
      */
     _createChatHandler(e) {
@@ -402,7 +404,9 @@ window.AppUi = (function() {
           /** After the new chat has been successfully created, redirect to the new chat. */
           location.href = `/${newChat.id}`;
         })
+        /** If a new chat couldn't be created successfully... */
         .catch(error => {
+          /** Draw a label, if it doesn't exist, along with any validation message(s). */
           let errorChatName = error.chatName;
           if (errorChatName) {
             let $label = $form.querySelector("label");
@@ -460,7 +464,7 @@ window.AppUi = (function() {
       $message.style.height = "auto";
     }
 
-    /** Send a signal that current user has started typing in the current chat. */
+    /** Send a signal that the current user has started typing in the current chat, by making an API call. */
     _typing() {
       AppWorker.api.postMessage({
         action: "typing",
@@ -609,7 +613,7 @@ window.AppUi = (function() {
     }
 
     /**
-     * Draw `user` info on the UI.
+     * Draw `user` info in the UI.
      * @param {Object} user The user object.
      * @param {String} user.name The name of the user.
      * @param {Number} user.tag The tag of the user.
@@ -620,7 +624,7 @@ window.AppUi = (function() {
     }
 
     /**
-     * Draw a list of `chats` on the UI.
+     * Draw a list of `chats` in the UI.
      * @param {Object[]} chats A list of chats.
      * @param {String} chats[].id The id of the chat.
      * @param {String} chats[].name The name of the chat.
@@ -648,7 +652,10 @@ window.AppUi = (function() {
 
         $div.appendChild($chatName);
 
-        /** If the current chat isn't the same as the iterated chat, then draw an `a.href` element. */
+        /**
+         * If the current chat isn't the same as the iterated chat,
+         * draw a `a.href` element instead.
+         */
         if (this._chatId === chat.id) {
           $div.classList.add("bg-grey-light");
 
@@ -672,7 +679,7 @@ window.AppUi = (function() {
     }
 
     /**
-     * Draw a welcome message for the `user` on the UI.
+     * Draw a welcome message for the `user` in the UI.
      * @param {Object} user The user to say welcome to.
      * @param {String} user.name The name of the user.
      * @param {String} user.tag The tag of the user.
@@ -746,7 +753,7 @@ window.AppUi = (function() {
     }
 
     /**
-     * Draw a goodbye message for the `user` on the UI.
+     * Draw a goodbye message for the `user` in the UI.
      * @param {Object} user The user to say goodbye to.
      * @param {String} user.name The name of the user.
      * @param {String} user.tag The tag of the user.
@@ -821,11 +828,11 @@ window.AppUi = (function() {
     }
 
     /**
-     * Draw a list of `messages` on the UI.
+     * Draw a list of `messages` in the UI.
      * @param {Object[]} messages A list of messages.
      * @param {String} messages[].user The user that sent the message.
      * @param {String} messages[].content The content of the message.
-     * @param {String} messages[].sentAt The timestamp when the message was sent.
+     * @param {String} messages[].createdAt The date when the message was sent.
      */
     drawMessages(messages) {
       /**
@@ -937,7 +944,7 @@ window.AppUi = (function() {
     }
 
     /**
-     * Draw a list of `users` on the UI.
+     * Draw a list of `users` in the UI.
      * @param {Object[]} users A list of users.
      */
     drawUsers(users) {
@@ -949,7 +956,7 @@ window.AppUi = (function() {
     }
 
     /**
-     * Draw a `user` just before the `nextUser` on the UI.
+     * Draw a `user` just before the `nextUser` in the UI.
      * @param {Object} user The user to be drawn.
      * @param {Object} nextUser The next user in line.
      */
