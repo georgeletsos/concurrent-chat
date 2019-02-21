@@ -134,8 +134,8 @@ function api(method, path, data) {
     request.open(method, path);
 
     /**
-     * If there's no optional request payload `data`, we can simply send the request.
-     * Otherwise, we have to create a new FormData instance to properly encode the form data for the request.
+     * If there's no optional request payload `data`, simply send the request.
+     * Otherwise, create a new FormData instance to properly encode the form data for the request.
      */
     if (Object.is(data, undefined)) {
       request.send();
@@ -154,7 +154,7 @@ function api(method, path, data) {
 /**
  * Register a new user, using the api function.
  * @param {String} [username=""] The username of the new user.
- * @returns {Promise} A promise that is resolved with the new user, or rejected with validation message(s).
+ * @returns {Promise<Object>} A promise that is resolved with the new user, or rejected with validation message(s).
  */
 function registerUser(username = "") {
   return api("post", `/api/auth/register`, {
@@ -163,7 +163,7 @@ function registerUser(username = "") {
 }
 
 /**
- * Login a user, using the api function.
+ * Log in a user, using the api function.
  * @param {String} [userId=""] The id of the user.
  * @returns {Promise} A promise that is resolved or rejected with no payload.
  */
@@ -175,17 +175,17 @@ function loginUser(userId = "") {
 
 /**
  * Get the list of chats, using the api function.
- * @returns {Promise} A promise that is resolved with the list of Chats.
+ * @returns {Promise<Object[]>} A promise that is resolved with the list of chats.
  */
 function getChats() {
   return api("get", `/api/chats`);
 }
 
 /**
- * Create a new chat with a specific user as the owner, using the api function.
+ * Create a new chat with a unique name, using the api function.
  * @param {String} [userId=""] The id of the specific user.
  * @param {String} [chatName=""] The name of the chat.
- * @returns {Promise} A promise that is resolved with the new chat.
+ * @returns {Promise<Object>} A promise that is resolved with the new chat or rejected with validation message(s).
  */
 function createChat(userId = "", chatName = "") {
   return api("post", `/api/chats/create`, {
@@ -197,7 +197,7 @@ function createChat(userId = "", chatName = "") {
 /**
  * Get the list of users for a specific chat, using the api function.
  * @param {String} [chatId=""] The id of the specific chat.
- * @returns {Promise} A promise that is resolved with the list of users.
+ * @returns {Promise<Object[]>} A promise that is resolved with the list of users.
  */
 function getChatUsers(chatId = "") {
   return api("get", `/api/chats/${chatId}/users`);
@@ -206,7 +206,7 @@ function getChatUsers(chatId = "") {
 /**
  * Get the list of messages for a specific chat, using the api function.
  * @param {String} [chatId=""] The id of the specific chat.
- * @returns {Promise} A promise that is resolved with the list of messages.
+ * @returns {Promise<Object[]>} A promise that is resolved with the list of messages.
  */
 function getChatMessages(chatId = "") {
   return api("get", `/api/chats/${chatId}/messages`);
@@ -217,7 +217,7 @@ function getChatMessages(chatId = "") {
  * @param {String} [chatId=""] The id of the specific chat.
  * @param {String} [userId=""] The id of the specific user.
  * @param {String} [messageContent=""] The message content.
- * @returns {Promise} A promise that is resolved with the message.
+ * @returns {Promise<Object>} A promise that is resolved with the message.
  */
 function postChatMessage(chatId = "", userId = "", messageContent = "") {
   return api("post", `/api/chats/${chatId}/message`, {
@@ -254,7 +254,7 @@ function connectWebsocket(chatId, userId) {
   let socket = io({ query: { chatId: chatId, userId: userId } });
 
   /**
-   * Upon connection, find the chat from the list of chats in memory
+   * Upon connection, find the chat in the list of chats in memory
    * and let the main thread know that the connection was successful,
    * along with the name of the chat.
    */
@@ -273,8 +273,8 @@ function connectWebsocket(chatId, userId) {
 
   /**
    * When a user connects, add the user to the list of users in memory
-   * and sort the list alphabetically.
-   * Then find the index of the user in memory to help find the next User in line.
+   * and sort the list alphabetically, followed by tag.
+   * Then find the index of the user in memory to help find the next user in line.
    * Let the main thread know a user has just been connected, along with who that user
    * and the next user are.
    */
@@ -340,7 +340,7 @@ function connectWebsocket(chatId, userId) {
 
   /**
    * When a user has started typing, if that user isn't the current one,
-   * add the user to the list of users currently typing, along with the user timeout (that's going to remove the user from the list).
+   * add the user to the list of users currently typing, along with the user timeout (that's going to remove the user from the list after some time).
    * Let the main thread know a user has started typing, along with the list of users currently typing.
    */
   socket.on("userStartedTyping", function(user) {
@@ -351,7 +351,7 @@ function connectWebsocket(chatId, userId) {
 
     /**
      * @property {Object} user The user currently typing.
-     * @property {timeout} timeout The user timeout that's going to remove the user from the list.
+     * @property {Timeout} timeout The user timeout that's going to remove the user from the list after some time.
      */
     let typingUser = {
       user: user,
@@ -379,7 +379,7 @@ function connectWebsocket(chatId, userId) {
 
   /**
    * When a user has stopped typing, find the index of the user in memory and remove the user from the memory.
-   * Also clear the user timeout (that was going to remove the user from the list).
+   * Also clear the user timeout (that was going to remove the user from the list after some time).
    * Let the main thread know a user has stopped typing, along with the list of users currently typing.
    */
   socket.on("userStoppedTyping", function(user) {
@@ -402,7 +402,7 @@ function connectWebsocket(chatId, userId) {
 addEventListener("message", e => {
   /**
    * The generic promise resolver function.
-   * Its job is to post data back to the main thread using postMessage().
+   * Its job is to post data back to the main thread using `postMessage()`.
    * Also returns the `data` payload so that it may be used further down
    * in the promise resolution chain.
    * @param {*} data Payload.
@@ -419,7 +419,7 @@ addEventListener("message", e => {
 
   /**
    * The generic promise rejector function.
-   * Its job is to post data back to the main thread using postMessage().
+   * Its job is to post data back to the main thread using `postMessage()`.
    * Also returns the `error` payload so that it may be used further down
    * in the promise rejection chain.
    * @param {*} error Payload.
@@ -436,7 +436,7 @@ addEventListener("message", e => {
 
   /**
    * This switch decides which function to call based on the action property of the message.
-   * The above resolve() and reject() functions are passed to each returned promise.
+   * The above `resolve()` and `reject()` functions are passed to each returned promise.
    */
   switch (e.data.action) {
     case "connectWebsocket":
