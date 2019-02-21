@@ -10,11 +10,11 @@ let chatUsers;
 
 /**
  * List of users currently typing in memory.
- * @property {Object[]} typingUser
- * @property {Object} typingUser.user The user currently typing.
- * @property {Timeout} typingUser.timeout The user timeout that's going to remove the user from the list.
+ * @property {Object[]} typingUserWithTimeout
+ * @property {Object} typingUserWithTimeout.user The user currently typing.
+ * @property {Timeout} typingUserWithTimeout.timeout The user timeout that's going to remove the user from the list.
  */
-let typingUsers = [];
+let typingUsersWithTimeout = [];
 
 /**
  * Find a specific chat in memory.
@@ -40,7 +40,15 @@ function findChatUserIndexById(userId) {
  * @returns {Number} The index of the specific user.
  */
 function findTypingUserIndexById(userId) {
-  return typingUsers.findIndex(el => el.user.id === userId);
+  return typingUsersWithTimeout.findIndex(el => el.user.id === userId);
+}
+
+/**
+ * Extract the typing users from the `typingUsersWithTimeout` array.
+ * @returns {Object[]} An array of users currently typing.
+ */
+function getTypingUsers() {
+  return typingUsersWithTimeout.map(el => el.user);
 }
 
 /**
@@ -272,14 +280,14 @@ function connectWebsocket(chatId, userId) {
   });
 
   /**
-   * When a user connects, if the user is already in the list of users in memory, then stop.
-   * Otherwise add the user to the list of users in memory
-   * and sort the list alphabetically, followed by tag.
-   * Then find the index of the user in memory to help find the next user in line.
+   * When a user connects, if the user isn't already in the list of users in memory (in case of multiple tabs),
+   * then add the user to the list of users in memory and sort the list alphabetically, followed by tag.
+   * After that find the index of the user in memory to help find the next user in line.
    * Let the main thread know a user has just been connected, along with who that user
    * and the next user are.
    */
   socket.on("userConnected", function(user) {
+    /** Check if the user is already in the list of users in memory (in case of multiple tabs). */
     if (findChatUserIndexById(user.id) > -1) {
       return;
     }
@@ -345,7 +353,9 @@ function connectWebsocket(chatId, userId) {
 
   /**
    * When a user has started typing, if that user isn't the current one,
-   * add the user to the list of users currently typing, along with the user timeout (that's going to remove the user from the list after some time).
+   * and if that user isn't already in the list of users currently typing (in case of multiple tabs),
+   * add the user to the list of users currently typing,
+   * along with the user timeout (that's going to remove the user from the list after some time).
    * Let the main thread know a user has started typing, along with the list of users currently typing.
    */
   socket.on("userStartedTyping", function(user) {
@@ -354,52 +364,62 @@ function connectWebsocket(chatId, userId) {
       return;
     }
 
+    /** Check if the user is already in the list of users currently typing (in case of multiple tabs). */
+    if (findTypingUserIndexById(user.id) > -1) {
+      return;
+    }
+
     /**
      * @property {Object} user The user currently typing.
      * @property {Timeout} timeout The user timeout that's going to remove the user from the list after some time.
      */
-    let typingUser = {
+    let typingUserWithTimeout = {
       user: user,
       timeout: setTimeout(() => {
         let typingUserIndex = findTypingUserIndexById(user.id);
-
-        if (typingUserIndex > -1) {
-          typingUsers.splice(typingUserIndex, 1);
-
-          postMessage({
-            socketEvent: "userTyping",
-            typingUsers: typingUsers.map(el => el.user)
-          });
+        if (typingUserIndex === -1) {
+          return;
         }
+
+        typingUsersWithTimeout.splice(typingUserIndex, 1);
+
+        postMessage({
+          socketEvent: "userTyping",
+          typingUsers: getTypingUsers()
+        });
       }, 10e3)
     };
 
-    typingUsers.push(typingUser);
+    typingUsersWithTimeout.push(typingUserWithTimeout);
 
     postMessage({
       socketEvent: "userTyping",
-      typingUsers: typingUsers.map(el => el.user)
+      typingUsers: getTypingUsers()
     });
   });
 
   /**
-   * When a user has stopped typing, find the index of the user in memory and remove the user from the memory.
+   * When a user has stopped typing, find the index of the user in memory and remove the user from memory.
    * Also clear the user timeout (that was going to remove the user from the list after some time).
    * Let the main thread know a user has stopped typing, along with the list of users currently typing.
    */
   socket.on("userStoppedTyping", function(user) {
     let typingUserIndex = findTypingUserIndexById(user.id);
-
-    if (typingUserIndex > -1) {
-      let removedTypingUser = typingUsers.splice(typingUserIndex, 1)[0];
-
-      clearTimeout(removedTypingUser.timeout);
-
-      postMessage({
-        socketEvent: "userTyping",
-        typingUsers: typingUsers.map(el => el.user)
-      });
+    if (typingUserIndex === -1) {
+      return;
     }
+
+    let removedTypingUserWithTimeout = typingUsersWithTimeout.splice(
+      typingUserIndex,
+      1
+    )[0];
+
+    clearTimeout(removedTypingUserWithTimeout.timeout);
+
+    postMessage({
+      socketEvent: "userTyping",
+      typingUsers: getTypingUsers()
+    });
   });
 }
 
