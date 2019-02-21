@@ -272,13 +272,18 @@ function connectWebsocket(chatId, userId) {
   });
 
   /**
-   * When a user connects, add the user to the list of users in memory
+   * When a user connects, if the user is already in the list of users in memory, then stop.
+   * Otherwise add the user to the list of users in memory
    * and sort the list alphabetically, followed by tag.
    * Then find the index of the user in memory to help find the next user in line.
    * Let the main thread know a user has just been connected, along with who that user
    * and the next user are.
    */
   socket.on("userConnected", function(user) {
+    if (findChatUserIndexById(user.id) > -1) {
+      return;
+    }
+
     chatUsers.push(user);
 
     chatUsers.sort(sortByNameAndTag);
