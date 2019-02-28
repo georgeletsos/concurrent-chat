@@ -12,9 +12,19 @@
 
     <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.11/lodash.min.js"></script>
     <script src="https://unpkg.com/dayjs@1.8.0/dayjs.min.js"></script>
-    <script src="/js/app-worker.js" defer></script>
-    <script src="/js/app-ui.js" defer></script>
-    <script src="/js/app.js" defer></script>
+    <script src="/js/ui-components/UiComponent.js" defer></script>
+    <script src="/js/ui-components/RegisterUi.js" defer></script>
+    <script src="/js/ui-components/LoginUi.js" defer></script>
+    <script src="/js/ui-components/AccountInfoUi.js" defer></script>
+    <script src="/js/ui-components/ChatListUi.js" defer></script>
+    <script src="/js/ui-components/MessageListUi.js" defer></script>
+    <script src="/js/ui-components/MessageFieldUi.js" defer></script>
+    <script src="/js/ui-components/UserListUi.js" defer></script>
+    <script src="/js/ui-components/InstructionsUi.js" defer></script>
+    <script src="/js/ui-components/CreateChatUi.js" defer></script>
+    <script src="/js/ui-components/AppUi.js" defer></script>
+    <script src="/js/AppWorker.js" defer></script>
+    <script src="/js/main.js" defer></script>
   </head>
 
   <body>
@@ -26,10 +36,7 @@
       >
         <form id="register-form" class="p-8 bg-grey-darker rounded shadow-md">
           <div class="mb-4">
-            <label
-              class="mb-2 block text-sm text-grey-lighter font-bold"
-              for="username"
-            >
+            <label class="mb-2 block text-sm text-grey-lighter font-bold">
               Username
             </label>
             <input
@@ -63,7 +70,7 @@
         <!-- Chats list -->
         <div
           id="chats-container"
-          class="w-1/5 bg-grey-darkest flex flex-col rounded-l-lg hidden"
+          class="w-1/5 bg-grey-darkest flex flex-col rounded-l-lg"
         >
           <ul
             id="chats"
@@ -71,9 +78,10 @@
           ></ul>
 
           <form
-            id="chat-form"
+            id="create-chat-form"
             class="p-2 border-t border-solid border-grey-dark animate-scale-up-bl hidden"
           >
+            <label class="mb-2 block hidden"></label>
             <input
               class="py-2 px-3 w-full bg-black text-base text-grey-lightest border border-solid border-grey-dark rounded leading-tight hover:border-black focus:border-purple focus:outline-none transition-border-1"
               type="text"
@@ -85,12 +93,15 @@
             class="px-4 py-2 bg-black flex justify-between items-center rounded-bl-lg"
           >
             <div>
-              <div id="my-username" class="mb-1 text-base text-white"></div>
-              <div id="my-tag" class="text-sm text-white opacity-50"></div>
+              <div
+                id="account-username"
+                class="mb-1 text-base text-white"
+              ></div>
+              <div id="account-tag" class="text-sm text-white opacity-50"></div>
             </div>
 
             <button
-              id="show-chat-btn"
+              id="show-create-chat-btn"
               class="p-2 hover:bg-grey-darker focus:outline-none"
             >
               <div
