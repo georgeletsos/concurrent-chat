@@ -1,5 +1,3 @@
-"use strict";
-
 /* global importScripts io */
 
 /** List of chats in memory. */
@@ -175,7 +173,7 @@ function registerUser(username = "") {
  * @param {String} [userId=""] The id of the user.
  * @returns {Promise} A promise that is resolved or rejected with no payload.
  */
-function loginUser(userId = "") {
+function logInUser(userId = "") {
   return api("post", `/api/auth/login`, {
     userId: userId
   });
@@ -240,10 +238,19 @@ function postChatMessage(chatId = "", userId = "", messageContent = "") {
  * @param {String} [userId=""] The id of the specific user.
  * @returns {Promise} A promise that is resolved or rejected with no payload.
  */
-function typing(chatId = "", userId = "") {
+function userTyping(chatId = "", userId = "") {
   return api("post", `/api/chats/${chatId}/typing`, {
     userId: userId
   });
+}
+
+/**
+ * Checks if a chat id exists in the list of chats.
+ * @param {String} chatId
+ */
+function checkIfChatExists(chatId) {
+  let chat = findChatById(chatId);
+  return Promise.resolve(chat ? true : false);
 }
 
 /**
@@ -252,7 +259,7 @@ function typing(chatId = "", userId = "") {
  * @param {String} chatId The id of the chat.
  * @param {String} userId The id of the user.
  */
-function connectWebsocket(chatId, userId) {
+function connectSocket(chatId, userId) {
   /** Load the Socket.io script into the worker. */
   importScripts(
     "https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"
@@ -274,7 +281,7 @@ function connectWebsocket(chatId, userId) {
     }
 
     postMessage({
-      socketEvent: "connect",
+      event: "socketConnected",
       chatName: currentChat.name
     });
   });
@@ -303,7 +310,7 @@ function connectWebsocket(chatId, userId) {
     }
 
     postMessage({
-      socketEvent: "userConnected",
+      event: "userConnected",
       user: user,
       nextUser: nextUser
     });
@@ -321,7 +328,7 @@ function connectWebsocket(chatId, userId) {
     }
 
     postMessage({
-      socketEvent: "userDisconnected",
+      event: "userDisconnected",
       user: user
     });
   });
@@ -335,7 +342,7 @@ function connectWebsocket(chatId, userId) {
     chats.push(chat);
 
     postMessage({
-      socketEvent: "chatCreated",
+      event: "chatCreated",
       chat: chat
     });
   });
@@ -346,7 +353,7 @@ function connectWebsocket(chatId, userId) {
    */
   socket.on("chatMessage", function(message) {
     postMessage({
-      socketEvent: "chatMessage",
+      event: "messagePosted",
       message: message
     });
   });
@@ -384,7 +391,7 @@ function connectWebsocket(chatId, userId) {
         typingUsersWithTimeout.splice(typingUserIndex, 1);
 
         postMessage({
-          socketEvent: "userTyping",
+          event: "userTyping",
           typingUsers: getTypingUsers()
         });
       }, 10e3)
@@ -393,7 +400,7 @@ function connectWebsocket(chatId, userId) {
     typingUsersWithTimeout.push(typingUserWithTimeout);
 
     postMessage({
-      socketEvent: "userTyping",
+      event: "userTyping",
       typingUsers: getTypingUsers()
     });
   });
@@ -417,7 +424,7 @@ function connectWebsocket(chatId, userId) {
     clearTimeout(removedTypingUserWithTimeout.timeout);
 
     postMessage({
-      socketEvent: "userTyping",
+      event: "userTyping",
       typingUsers: getTypingUsers()
     });
   });
@@ -464,14 +471,14 @@ addEventListener("message", e => {
    * The above `resolve()` and `reject()` functions are passed to each returned promise.
    */
   switch (e.data.action) {
-    case "connectWebsocket":
-      connectWebsocket(e.data.chatId, e.data.userId);
+    case "connectSocket":
+      connectSocket(e.data.chatId, e.data.userId);
       break;
     case "registerUser":
       registerUser(e.data.username).then(resolve, reject);
       break;
-    case "loginUser":
-      loginUser(e.data.userId).then(resolve, reject);
+    case "logInUser":
+      logInUser(e.data.userId).then(resolve, reject);
       break;
     case "getChats":
       getChats()
@@ -482,6 +489,9 @@ addEventListener("message", e => {
           return currentChats;
         })
         .then(resolve, reject);
+      break;
+    case "checkIfChatExists":
+      checkIfChatExists(e.data.chatId).then(resolve, reject);
       break;
     case "createChat":
       createChat(e.data.userId, e.data.chatName).then(resolve, reject);
@@ -505,8 +515,8 @@ addEventListener("message", e => {
         reject
       );
       break;
-    case "typing":
-      typing(e.data.chatId, e.data.userId).then(resolve, reject);
+    case "userTyping":
+      userTyping(e.data.chatId, e.data.userId).then(resolve, reject);
       break;
   }
 });
