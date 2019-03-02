@@ -190,7 +190,7 @@ module.exports = class ChatRouteManager extends RouteManager {
     res.end(message.toClientJSON());
 
     /** Emit to every websocket in the chat room that a message has just been posted. */
-    this.socket.io.to(chatId).emit("chatMessage", message.toClientObject());
+    this.socket.io.to(chatId).emit("messagePosted", message.toClientObject());
 
     /** Emit to every websocket in the chat room that a user has stopped typing. */
     this.socket.io.to(chatId).emit("userStoppedTyping", user.toClientObject());
@@ -276,7 +276,7 @@ module.exports = class ChatRouteManager extends RouteManager {
     let existingChat = await Chat.findOne({ name: chatName });
     if (existingChat) {
       res.writeHead(400, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ chatName: "Chat already exists" }));
+      res.end(JSON.stringify({ errors: { chatName: "Chat already exists" } }));
       return;
     }
 
