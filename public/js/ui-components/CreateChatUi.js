@@ -65,24 +65,29 @@ class CreateChatUi extends UiComponent {
     }
 
     /** Make an API call attempting to create a new chat. */
-    this.appWorker.api
+    this.appWorker
       .postMessage({
-        action: "createChat",
+        op: "createChat",
         userId: this.user.id,
         chatName: chatName
       })
-      .then(newChat => {
-        location.href = "/" + newChat.id;
-      })
-      .catch(error => {
-        let errorChatName = error.chatName;
-        if (errorChatName) {
-          this.drawValidation(
-            errorChatName,
-            this.$chatName,
-            this.$chatNameLabel
-          );
+      .then(response => {
+        let errors = response.errors;
+        if (errors) {
+          let errorChatName = errors.chatName;
+          if (errorChatName) {
+            this.drawValidation(
+              errorChatName,
+              this.$chatName,
+              this.$chatNameLabel
+            );
+          }
+
+          return;
         }
+
+        let newChat = response;
+        location.href = "/" + newChat.id;
       });
   }
 

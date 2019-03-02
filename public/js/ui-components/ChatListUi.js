@@ -26,9 +26,9 @@ class ChatListUi extends UiComponent {
     this.setUpSocketEventListeners();
 
     /** Make an API call to get the list of chats. */
-    await this.appWorker.api
+    await this.appWorker
       .postMessage({
-        action: "getChats"
+        op: "getChats"
       })
       .then(chats => {
         this.drawChats(chats);

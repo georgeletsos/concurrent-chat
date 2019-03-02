@@ -25,8 +25,8 @@ class LoginUi extends UiComponent {
 
     try {
       /** Make an API call attempting to log in a user. */
-      await this.appWorker.api.postMessage({
-        action: "logInUser",
+      await this.appWorker.postMessage({
+        op: "logInUser",
         userId: user.id
       });
 

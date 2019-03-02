@@ -60,17 +60,22 @@ class RegisterUi extends UiComponent {
 
     let username = this.$username.value.trim();
 
-    let tryCatchRegister = async () => {
-      let user;
+    let registerOperation = async () => {
+      /** Make an API call attempting to register a new user. */
+      let response = await this.appWorker.postMessage({
+        op: "registerUser",
+        username: username
+      });
 
-      try {
-        /** Make an API call attempting to register a new user. */
-        user = await this.appWorker.api.postMessage({
-          action: "registerUser",
-          username: username
-        });
-      } catch (error) {
-        let errorUsername = error.username;
+      /** Hide the loading animation of the button. */
+      this.$buttonLoading.classList.add("hidden");
+
+      /** Show the button text. */
+      this.$buttonText.classList.remove("hidden");
+
+      let errors = response.errors;
+      if (errors) {
+        let errorUsername = errors.username;
         if (errorUsername) {
           this.drawValidation(
             errorUsername,
@@ -80,14 +85,9 @@ class RegisterUi extends UiComponent {
         }
 
         return;
-      } finally {
-        /** Hide the loading animation of the button. */
-        this.$buttonLoading.classList.add("hidden");
-
-        /** Show the button text. */
-        this.$buttonText.classList.remove("hidden");
       }
 
+      let user = response;
       let userRegisteredEvent = new CustomEvent("userRegistered", {
         detail: { user: user }
       });
@@ -96,7 +96,7 @@ class RegisterUi extends UiComponent {
     };
 
     /** Give the loading animation half a second... (Doesn't look nice if it's too fast) */
-    setTimeout(tryCatchRegister, 5e2);
+    setTimeout(registerOperation, 5e2);
   }
 
   /**
