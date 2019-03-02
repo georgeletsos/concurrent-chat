@@ -132,8 +132,8 @@ class MessageFieldUi extends UiComponent {
    * Notifies the API that the current user is typing.
    */
   userTyping() {
-    this.appWorker.api.postMessage({
-      action: "userTyping",
+    this.appWorker.postMessage({
+      op: "userTyping",
       chatId: this.chatId,
       userId: this.user.id
     });
@@ -158,9 +158,9 @@ class MessageFieldUi extends UiComponent {
     }
 
     /** Make an API call to post the message. */
-    this.appWorker.api
+    this.appWorker
       .postMessage({
-        action: "postChatMessage",
+        op: "postChatMessage",
         chatId: this.chatId,
         userId: this.user.id,
         messageContent: messageContent

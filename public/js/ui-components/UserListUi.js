@@ -27,9 +27,9 @@ class UserListUi extends UiComponent {
     this.setUpSocketEventListeners();
 
     /** Make an API call to get the list of current chat's users. */
-    this.appWorker.api
+    this.appWorker
       .postMessage({
-        action: "getChatUsers",
+        op: "getChatUsers",
         chatId: this.chatId
       })
       .then(users => {

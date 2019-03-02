@@ -37,9 +37,9 @@ class MessageListUi extends UiComponent {
     this.show();
 
     /** Make an API call to get the list of current chat's messages. */
-    this.appWorker.api
+    this.appWorker
       .postMessage({
-        action: "getChatMessages",
+        op: "getChatMessages",
         chatId: this.chatId
       })
       .then(messages => {

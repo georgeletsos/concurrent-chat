@@ -70,8 +70,8 @@ class AppUi extends UiComponent {
 
     await this.chatListUi.init();
 
-    let chatExists = await this.appWorker.api.postMessage({
-      action: "checkIfChatExists",
+    let chatExists = await this.appWorker.postMessage({
+      op: "chatExists?",
       chatId: this.chatId
     });
     if (!chatExists) {
@@ -87,8 +87,8 @@ class AppUi extends UiComponent {
     this.messageFieldUi.init();
     this.userListUi.init();
 
-    this.appWorker.api.postMessage({
-      action: "connectSocket",
+    this.appWorker.postMessage({
+      op: "connectSocket",
       chatId: this.chatId,
       userId: this.user.id
     });
