@@ -36,7 +36,9 @@ module.exports = class AuthRouteManager extends RouteManager {
 
     if (!username) {
       res.writeHead(400, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ username: "This field is required" }));
+      res.end(
+        JSON.stringify({ errors: { username: "This field is required" } })
+      );
       return;
     }
 
