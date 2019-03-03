@@ -356,10 +356,6 @@ threadWorker.registerJob("connectSocket", message => {
   /** Send along the id of the chat and the id of the user. */
   let socket = io({ query: { chatId: chatId, userId: userId } });
 
-  let chats = threadWorker.chats;
-  let chatUsers = threadWorker.chatUsers;
-  let typingUsersWithTimeout = threadWorker.typingUsersWithTimeout;
-
   /**
    * Called upon successful connection.
    * Finds the chat in the list of chats in memory
@@ -367,7 +363,7 @@ threadWorker.registerJob("connectSocket", message => {
    * along with the name of the chat.
    */
   socket.on("connect", function() {
-    let currentChat = ThreadWorker.findChatById(chats, chatId);
+    let currentChat = ThreadWorker.findChatById(threadWorker.chats, chatId);
 
     if (!currentChat) {
       return;
@@ -388,18 +384,23 @@ threadWorker.registerJob("connectSocket", message => {
    * and the next user are.
    */
   socket.on("userConnected", function(user) {
-    if (ThreadWorker.findChatUserIndexById(chatUsers, user.id) > -1) {
+    if (
+      ThreadWorker.findChatUserIndexById(threadWorker.chatUsers, user.id) > -1
+    ) {
       return;
     }
 
-    chatUsers.push(user);
+    threadWorker.chatUsers.push(user);
 
-    chatUsers.sort(ThreadWorker.sortByNameAndTag);
+    threadWorker.chatUsers.sort(ThreadWorker.sortByNameAndTag);
 
-    let userIndex = ThreadWorker.findChatUserIndexById(chatUsers, user.id),
+    let userIndex = ThreadWorker.findChatUserIndexById(
+        threadWorker.chatUsers,
+        user.id
+      ),
       nextUser;
     if (userIndex > -1) {
-      nextUser = chatUsers[userIndex + 1];
+      nextUser = threadWorker.chatUsers[userIndex + 1];
     }
 
     postMessage({
@@ -415,10 +416,13 @@ threadWorker.registerJob("connectSocket", message => {
    * Informs the main thread that a user has just been disconnected, along with who that user is.
    */
   socket.on("userDisconnected", function(user) {
-    let userIndex = ThreadWorker.findChatUserIndexById(chatUsers, user.id);
+    let userIndex = ThreadWorker.findChatUserIndexById(
+      threadWorker.chatUsers,
+      user.id
+    );
 
     if (userIndex > -1) {
-      chatUsers.splice(userIndex, 1);
+      threadWorker.chatUsers.splice(userIndex, 1);
     }
 
     postMessage({
@@ -434,7 +438,7 @@ threadWorker.registerJob("connectSocket", message => {
    * along with the new chat.
    */
   socket.on("chatCreated", function(chat) {
-    chats.push(chat);
+    threadWorker.chats.push(chat);
 
     postMessage({
       event: "chatCreated",
@@ -468,7 +472,10 @@ threadWorker.registerJob("connectSocket", message => {
     }
 
     if (
-      ThreadWorker.findTypingUserIndexById(typingUsersWithTimeout, user.id) > -1
+      ThreadWorker.findTypingUserIndexById(
+        threadWorker.typingUsersWithTimeout,
+        user.id
+      ) > -1
     ) {
       return;
     }
@@ -481,27 +488,31 @@ threadWorker.registerJob("connectSocket", message => {
       user: user,
       timeout: setTimeout(() => {
         let typingUserIndex = ThreadWorker.findTypingUserIndexById(
-          typingUsersWithTimeout,
+          threadWorker.typingUsersWithTimeout,
           user.id
         );
         if (typingUserIndex === -1) {
           return;
         }
 
-        typingUsersWithTimeout.splice(typingUserIndex, 1);
+        threadWorker.typingUsersWithTimeout.splice(typingUserIndex, 1);
 
         postMessage({
           event: "userTyping",
-          typingUsers: ThreadWorker.getTypingUsers(typingUsersWithTimeout)
+          typingUsers: ThreadWorker.getTypingUsers(
+            threadWorker.typingUsersWithTimeout
+          )
         });
       }, 10e3)
     };
 
-    typingUsersWithTimeout.push(typingUserWithTimeout);
+    threadWorker.typingUsersWithTimeout.push(typingUserWithTimeout);
 
     postMessage({
       event: "userTyping",
-      typingUsers: ThreadWorker.getTypingUsers(typingUsersWithTimeout)
+      typingUsers: ThreadWorker.getTypingUsers(
+        threadWorker.typingUsersWithTimeout
+      )
     });
   });
 
@@ -513,14 +524,14 @@ threadWorker.registerJob("connectSocket", message => {
    */
   socket.on("userStoppedTyping", function(user) {
     let typingUserIndex = ThreadWorker.findTypingUserIndexById(
-      typingUsersWithTimeout,
+      threadWorker.typingUsersWithTimeout,
       user.id
     );
     if (typingUserIndex === -1) {
       return;
     }
 
-    let removedTypingUserWithTimeout = typingUsersWithTimeout.splice(
+    let removedTypingUserWithTimeout = threadWorker.typingUsersWithTimeout.splice(
       typingUserIndex,
       1
     )[0];
@@ -529,7 +540,9 @@ threadWorker.registerJob("connectSocket", message => {
 
     postMessage({
       event: "userTyping",
-      typingUsers: ThreadWorker.getTypingUsers(typingUsersWithTimeout)
+      typingUsers: ThreadWorker.getTypingUsers(
+        threadWorker.typingUsersWithTimeout
+      )
     });
   });
 });
