@@ -18,7 +18,6 @@ class LoginUi extends UiComponent {
    *   Removes any user info existing in local storage.
    * Finally emits an event about what happened.
    * @param {Object} user The user info object.
-   * @param {String} user.id
    */
   async logInUser(user) {
     let loggedIn;
@@ -27,7 +26,7 @@ class LoginUi extends UiComponent {
       /** Make an API call attempting to log in a user. */
       await this.appWorker.postMessage({
         op: "logInUser",
-        userId: user.id
+        user: user
       });
 
       localStorage.setItem("user", JSON.stringify(user));

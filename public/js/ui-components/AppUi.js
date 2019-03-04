@@ -88,9 +88,7 @@ class AppUi extends UiComponent {
     this.userListUi.init();
 
     this.appWorker.postMessage({
-      op: "connectSocket",
-      chatId: this.chatId,
-      userId: this.user.id
+      op: "connectSocket"
     });
   }
 
