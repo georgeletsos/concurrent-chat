@@ -9,6 +9,9 @@ module.exports = class Socket {
    */
   constructor(mongoose) {
     this.mongoose = mongoose;
+
+    this.onConnect = this.onConnect.bind(this);
+    this.onDisconnect = this.onDisconnect.bind(this);
   }
 
   /**
@@ -19,26 +22,35 @@ module.exports = class Socket {
   connect(server) {
     this.io = SocketIo(server);
 
-    this.io.on("connect", socket => this.onConnect(socket));
+    this.io.on("connect", this.onConnect);
   }
 
   /**
-   * Handle a websocket connection between a specific chat and a specific user.
-   * Start by finding the specific chat and the specific user in the database.
-   * If the user is not already in the chat, add the user to the chat.
-   * Add the websocket to the room of the specific chat.
-   * Emit to every websocket in the chat room that the user has just been connected.
-   * Finally listen on the disconnection event:
-   *   When the user has been disconnected, remove the user from the list of users of the chat
-   *   and emit to every websocket in chat the room that the user has been disconnected.
-   * @param {Object} socket The connected websocket.
+   * Filters a list of users by another user, to get any duplicates.
+   * @param {User[]} users
+   * @param {User} filterUser
+   * @returns {User[]} A list of duplicated users.
+   */
+  static getMatchedUsers(users, filterUser) {
+    return users.filter(user => user._id.equals(filterUser._id));
+  }
+
+  /**
+   * Called when a socket connects.
+   * Handles a socket connection between a specific chat and a specific user.
+   * Finds the specific chat and the specific user in the database.
+   * Adds the socket to the room of the specific chat.
+   * Afterwards, if there aren't any duplicate users in the chat:
+   *   Emits to every websocket in the chat room that the user has been connected.
+   * Finally listen to the disconnection event.
+   * @param {Object} socket The connected socket.
    * @param {String} socket.chatId The specific chat id.
    * @param {String} socket.userId The specific user id.
    * @async
    */
   async onConnect(socket) {
-    let chatId = socket.handshake.query.chatId,
-      userId = socket.handshake.query.userId;
+    let chatId = socket.handshake.query.chatId;
+    let userId = socket.handshake.query.userId;
 
     if (
       !this.mongoose.isValidObjectId(chatId) ||
@@ -57,33 +69,52 @@ module.exports = class Socket {
       return;
     }
 
-    let chatUser = chat.users.find(chatUser => chatUser._id.equals(user._id));
-    if (!chatUser) {
-      chat.users.push(user);
-
-      await chat.save();
-    }
+    chat.users.push(user);
+    await chat.save();
 
     /** Add the websocket to the room of the chat. */
     socket.join(chatId);
 
-    /** Emit to every websocket in the chat room that the user has been connected. */
-    this.io.to(chatId).emit("userConnected", user.toClientObject());
+    if (Socket.getMatchedUsers(chat.users, user).length === 1) {
+      /** Emit to every websocket in the chat room that the user has been connected. */
+      this.io.to(chatId).emit("userConnected", user.toClientObject());
+    }
 
-    /** Listen on the disconnection event. */
-    socket.on("disconnect", async () => {
-      /** Remove the user from the list of users of the chat. */
-      let chatuserIndex = chat.users.findIndex(chatUser =>
-        chatUser._id.equals(user._id)
-      );
-      if (chatuserIndex > -1) {
-        chat.users.pull(user._id);
+    /** Listen to the disconnection event. */
+    socket.on("disconnect", () => {
+      this.onDisconnect(chatId, user);
+    });
+  }
 
-        await chat.save();
-      }
+  /**
+   * Called when a socket disconnects.
+   * Finds the user in the chat and removes him.
+   * Afterwards, if there aren't any duplicate users in the chat:
+   *   Emits to every websocket in the chat room that the user has been disconnected.
+   * @param {String} chatId
+   * @param {User} user
+   * @async
+   */
+  async onDisconnect(chatId, user) {
+    let chat = await Chat.findById(chatId).populate("users");
+    if (!chat) {
+      return;
+    }
 
+    /** Remove the user from the chat. */
+    let chatUserIndex = chat.users.findIndex(chatUser =>
+      chatUser._id.equals(user._id)
+    );
+    if (chatUserIndex === -1) {
+      return;
+    }
+
+    chat.users.splice(chatUserIndex, 1);
+    await chat.save();
+
+    if (Socket.getMatchedUsers(chat.users, user).length === 0) {
       /** Emit to every websocket in the chat room that the user has been disconnected. */
       this.io.to(chatId).emit("userDisconnected", user.toClientObject());
-    });
+    }
   }
 };
