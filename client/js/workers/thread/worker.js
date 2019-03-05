@@ -32,8 +32,9 @@ threadWorker.registerJob("logInUser", message => {
   let user = message.user;
   return App.api("post", "/api/auth/login", {
     userId: user.id
-  }).then(() => {
+  }).then(res => {
     app.currentUser = user;
+    return res;
   });
 });
 
