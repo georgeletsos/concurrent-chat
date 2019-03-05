@@ -168,17 +168,12 @@ threadWorker.registerJob("connectSocket", () => {
 
   /**
    * Called when a user has been connected to the chat.
-   * If the user isn't already in the list of chat users in memory (in case of multiple tabs),
-   * then adds the user to the list of users in memory and sorts the list alphabetically, followed by tag.
+   * Adds the user to the list of users in memory and sorts the list alphabetically, followed by tag.
    * Afterwards finds the index of the user in memory and proceeds to find the next user in line.
    * Informs the main thread that a user has just been connected, along with who that user
    * and the next user are.
    */
   socket.on("userConnected", function(user) {
-    if (app.findUserIndexById(user.id) > -1) {
-      return;
-    }
-
     app.addUser(user);
 
     let users = app.sortUsers(App.sortByNameAndTag);
@@ -198,12 +193,11 @@ threadWorker.registerJob("connectSocket", () => {
 
   /**
    * Called when a user has been disconnected.
-   * Find the index of the user in memory and removes the user from the memory.
+   * Finds the index of the user in memory and removes the user from the memory.
    * Informs the main thread that a user has just been disconnected, along with who that user is.
    */
   socket.on("userDisconnected", function(user) {
     let userIndex = app.findUserIndexById(user.id);
-
     if (userIndex > -1) {
       app.removeUser(userIndex);
     }
@@ -244,17 +238,12 @@ threadWorker.registerJob("connectSocket", () => {
   /**
    * Called when a user has started typing.
    * If that user isn't the current one,
-   * and if that user isn't already in the list of users currently typing (in case of multiple tabs),
    * adds the user to the list of users currently typing,
    * along with that user timeout (that's going to remove that user from the list after some time).
    * Informs the main thread that a user has started typing, along with the list of users currently typing.
    */
   socket.on("userStartedTyping", function(user) {
     if (app.currentUser.id === user.id) {
-      return;
-    }
-
-    if (app.findTypingUserIndexById(user.id) > -1) {
       return;
     }
 
