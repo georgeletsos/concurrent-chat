@@ -50,7 +50,6 @@ module.exports = class AuthRouteManager extends RouteManager {
       name: username,
       tag: tag
     });
-
     await user.save();
 
     res.writeHead(200, { "Content-Type": "application/json" });
@@ -71,19 +70,18 @@ module.exports = class AuthRouteManager extends RouteManager {
 
     if (!userId || !this.mongoose.isValidObjectId(userId)) {
       res.writeHead(400);
-      res.end();
+      res.end(JSON.stringify({ errors: { params: "Missing parameters" } }));
       return;
     }
 
     let user = await User.findById(userId);
-
     if (!user) {
       res.writeHead(404);
-      res.end();
+      res.end(JSON.stringify({ errors: { user: "User not found" } }));
       return;
     }
 
     res.writeHead(200);
-    res.end();
+    res.end(user.toClientJSON());
   }
 };

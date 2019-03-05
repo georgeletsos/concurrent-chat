@@ -263,7 +263,7 @@ module.exports = class ChatRouteManager extends RouteManager {
 
     if (!userId || !this.mongoose.isValidObjectId(userId) || !chatName) {
       res.writeHead(400);
-      res.end();
+      res.end(JSON.stringify({ errors: { params: "Missing parameters" } }));
       return;
     }
 
@@ -277,7 +277,7 @@ module.exports = class ChatRouteManager extends RouteManager {
     let user = await User.findById(userId);
     if (!user) {
       res.writeHead(404);
-      res.end();
+      res.end(JSON.stringify({ errors: { user: "User not found" } }));
       return;
     }
 
