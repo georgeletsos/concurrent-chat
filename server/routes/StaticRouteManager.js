@@ -7,7 +7,7 @@ module.exports = class StaticRouteManager extends RouteManager {
   constructor() {
     super();
 
-    this.publicFolder = path.join(__dirname, "..", "..", "public");
+    this.publicFolder = path.join(__dirname, "..", "..", "client");
 
     this.registerRoutes();
   }
