@@ -80,7 +80,6 @@ module.exports = class ChatRouteManager extends RouteManager {
       path: "users",
       options: { sort: { name: "asc", tag: "asc" } }
     });
-
     if (!chat) {
       res.writeHead(404);
       res.end();
@@ -157,7 +156,6 @@ module.exports = class ChatRouteManager extends RouteManager {
      * with all its users.
      */
     let chat = await Chat.findById(chatId).populate("users");
-
     if (!chat) {
       res.writeHead(404);
       res.end();
@@ -169,7 +167,6 @@ module.exports = class ChatRouteManager extends RouteManager {
      * is in the chat.
      */
     let user = chat.users.find(user => user._id.toString() === userId);
-
     if (!user) {
       res.writeHead(404);
       res.end();
@@ -181,7 +178,6 @@ module.exports = class ChatRouteManager extends RouteManager {
       chat: chat._id,
       user: user._id
     });
-
     await message.save();
 
     message.user = user;
@@ -226,7 +222,6 @@ module.exports = class ChatRouteManager extends RouteManager {
      * with all its users.
      */
     let chat = await Chat.findById(chatId).populate("users");
-
     if (!chat) {
       res.writeHead(404);
       res.end();
@@ -238,7 +233,6 @@ module.exports = class ChatRouteManager extends RouteManager {
      * is in the chat.
      */
     let user = chat.users.find(user => user._id.toString() === userId);
-
     if (!user) {
       res.writeHead(404);
       res.end();
@@ -281,7 +275,6 @@ module.exports = class ChatRouteManager extends RouteManager {
     }
 
     let user = await User.findById(userId);
-
     if (!user) {
       res.writeHead(404);
       res.end();
@@ -291,7 +284,6 @@ module.exports = class ChatRouteManager extends RouteManager {
     let chat = new Chat({
       name: chatName
     });
-
     await chat.save();
 
     res.writeHead(200, { "Content-Type": "application/json" });
