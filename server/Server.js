@@ -1,33 +1,53 @@
 "use strict";
 
 const http = require("http");
+const path = require("path");
+const MainWorker = require("./workers/main/MainWorker");
 const Socket = require("./Socket");
-const mongoose = require("./Mongoose");
 const StaticRouteManager = require("./routes/StaticRouteManager");
 const AuthRouteManager = require("./routes/AuthRouteManager");
 const ChatRouteManager = require("./routes/api/ChatRouteManager");
-const Chat = require("./models/Chat");
-const Message = require("./models/Message");
 
 /** Class representing our Server implementation. */
 module.exports = class Server {
   constructor() {
-    mongoose.connect().then(async () => {
-      console.log("Connected to MongoDB");
+    let workerPath = path.join(__dirname, "workers", "threads", "index.js");
+    this.mainWorker = new MainWorker(workerPath);
+
+    this.mainWorker.send({ op: "connectMongo" }).then(async () => {
+      console.log("Everyone is connected to MongoDB");
+
+      /** Day(s) * Hour(s) * Minute(s) * Second(s) * 1000 */
+      let twoWeeksInMilliSeconds = 2 * 60 * 1e3;
 
       await Promise.all([
-        Chat.createGeneralChatIfNotExists(),
-        Chat.clearChatsFromUsers()
+        this.mainWorker.send({ op: "createGeneralChatIfNotExists" }),
+        this.mainWorker.send({ op: "clearChatsFromUsers" }),
+        this.mainWorker.send({
+          op: "deleteMessagesAndUnusedChatsSince",
+          sinceTime: twoWeeksInMilliSeconds
+        })
       ]);
 
-      this.socket = new Socket(mongoose);
+      /**
+       * Setup the mechanism to delete messages and unused chats
+       * every 2 weeks.
+       */
+      setInterval(() => {
+        this.mainWorker.send({
+          op: "deleteMessagesAndUnusedChatsSince",
+          sinceTime: twoWeeksInMilliSeconds
+        });
+      }, twoWeeksInMilliSeconds);
+
+      this.socket = new Socket(this.mainWorker);
 
       /** Register the auth routes. */
-      let authRouteManager = new AuthRouteManager(mongoose);
+      let authRouteManager = new AuthRouteManager(this.mainWorker);
       let authRoutes = authRouteManager.routes;
 
       /** Register the api chat routes. */
-      let chatRouteManager = new ChatRouteManager(mongoose, this.socket);
+      let chatRouteManager = new ChatRouteManager(this.mainWorker, this.socket);
       let chatRoutes = chatRouteManager.routes;
 
       /** Register the static routes. */
@@ -64,20 +84,6 @@ module.exports = class Server {
       /** Connect the socket to this server. */
       await this.socket.connect(this.server);
 
-      let now = new Date().getTime();
-      /** Day(s) * Hour(s) * Minute(s) * Second(s) * 1000 */
-      let twoWeeksInMilliSeconds = 14 * 24 * 60 * 60 * 1e3;
-      let twoWeeksAgo = new Date(now - twoWeeksInMilliSeconds);
-      await this.deleteMessagesAndUnusedChatsSince(twoWeeksAgo);
-
-      /**
-       * Setup the mechanism to delete messages and unused chats
-       * every 2 weeks.
-       */
-      setInterval(() => {
-        this.deleteMessagesAndUnusedChatsSince();
-      }, twoWeeksInMilliSeconds);
-
       this.port = process.env.PORT || 8080;
 
       /** Start the server listening for connections. */
@@ -85,98 +91,6 @@ module.exports = class Server {
         console.log(`Server running on port ${this.port}`);
       });
     });
-  }
-
-  /**
-   * Delete messages and unused chats that are older than `sinceDate`, except #general-chat.
-   *   Start by deleting messages that are older than `sinceDate`.
-   *   Then count the remaining messages for every chat, other than #general-chat.
-   *   If any chat doesn't have messages anymore, look up whether that chat was created before `sinceDate`.
-   *   If so, then delete that chat.
-   * @param {Date} sinceDate
-   * @async
-   */
-  async deleteMessagesAndUnusedChatsSince(sinceDate) {
-    let chats = await Chat.find();
-    for (let chat of chats) {
-      /** Delete messages of chat that are old. */
-      let { n, ok } = await Message.deleteMany({
-        chat: chat.id,
-        createdAt: { $lte: sinceDate }
-      });
-
-      if (ok !== 1) {
-        console.log("Deleting old messages of Chat", chat.name, "error", ok);
-        continue;
-      }
-
-      if (n > 0) {
-        console.log(
-          "Deleted",
-          n,
-          "old messages of Chat",
-          chat.name,
-          "successfully!"
-        );
-      }
-
-      /** If #general-chat, stop here. */
-      if (chat.name === "general-chat") {
-        continue;
-      }
-
-      /** Otherwise, count the remaining messages of chat... */
-      Message.countDocuments({
-        chat: chat.id
-      }).then((count, err) => {
-        if (err) {
-          console.log(
-            "Count remaining messages of Chat",
-            chat.name,
-            "error",
-            err
-          );
-          return;
-        }
-
-        if (count > 0) {
-          console.log(
-            "Chat",
-            chat.name,
-            "still has",
-            count,
-            "Messages remaining!"
-          );
-          return;
-        }
-
-        /**
-         * If the chat has no messages now:
-         *   Look up whether the chat is old.
-         *   And if so, delete that chat.
-         */
-        let chatCreationTimestamp = new Date(chat.createdAt).getTime();
-        if (chatCreationTimestamp > sinceDate.getTime()) {
-          return;
-        }
-
-        chat.remove(function(err, chat) {
-          if (err) {
-            console.log(
-              "Deleting old Chat",
-              chat.name,
-              "without messages error",
-              err
-            );
-          }
-          console.log(
-            "Deleted old Chat",
-            chat.name,
-            "without messages successfully!"
-          );
-        });
-      });
-    }
   }
 
   /**
