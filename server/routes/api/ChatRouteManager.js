@@ -1,16 +1,13 @@
 const RouteManager = require("../RouteManager");
-const User = require("../../models/User");
-const Chat = require("../../models/Chat");
-const Message = require("../../models/Message");
 
 /** Class that registers all the api chat routes and handlers. */
 module.exports = class ChatRouteManager extends RouteManager {
   /**
-   * @param {Mongoose} mongoose Our mongoose instance.
+   * @param {MainWorker} mainWorker Our mainWorker instance.
    * @param {Socket} socket Our socket instance.
    */
-  constructor(mongoose, socket) {
-    super(mongoose, socket);
+  constructor(mainWorker, socket) {
+    super(mainWorker, socket);
 
     this.registerRoutes();
   }
@@ -43,92 +40,60 @@ module.exports = class ChatRouteManager extends RouteManager {
   }
 
   /**
-   * Get the list of chats from the database and respond with the said list.
+   * Passes the job of retrieving the list of chats to a worker.
    * @param {Response} res The HTTP response.
-   * @async
    */
-  async getChats(res) {
-    let chats = await Chat.find();
-
-    chats = chats.map(chat => chat.toClientObject());
-
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(chats));
+  getChats(res) {
+    this.mainWorker
+      .send({
+        op: "getChats"
+      })
+      .then(message => {
+        res.writeHead(message.statusCode, message.contentType);
+        res.end(message.payload);
+      });
   }
 
   /**
-   * Get the list of users of a specific chat, after finding the chat in the database
-   * and respond with the said list.
-   * If any form fields are missing, respond with 400.
-   * If the chat was not found, respond with 404.
+   * Passes the job of retrieving the list of users of a specific chat to a worker.
    * @param {Response} res The HTTP response.
    * @param {String} chatId The id of the specific chat.
-   * @async
    */
-  async getChatUsers(res, chatId) {
-    if (!chatId || !this.mongoose.isValidObjectId(chatId)) {
-      res.writeHead(400);
-      res.end();
-      return;
-    }
-
-    /**
-     * Find the specific chat in the database, with all its users.
-     * Also sort the users alphabetically, followed by tag.
-     */
-    let chat = await Chat.findById(chatId).populate({
-      path: "users",
-      options: { sort: { name: "asc", tag: "asc" } }
-    });
-    if (!chat) {
-      res.writeHead(404);
-      res.end();
-      return;
-    }
-
-    let users = chat.users.map(user => user.toClientObject());
-
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(users));
+  getChatUsers(res, chatId) {
+    this.mainWorker
+      .send({
+        op: "getChatUsers",
+        chatId
+      })
+      .then(message => {
+        res.writeHead(message.statusCode, message.contentType);
+        res.end(message.payload);
+      });
   }
 
   /**
-   * Get the list of messages of a specific chat, after finding the chat in the database
-   * and respond with the said list.
-   * If any form fields are missing, respond with 400.
-   * If the chat was not found, respond with 404.
+   * Passes the job of retrieving the list of messages of a specific chat to a worker.
    * @param {Response} res The HTTP response.
    * @param {String} chatId The id of the specific chat.
-   * @async
    */
-  async getChatMessages(res, chatId) {
-    if (!chatId || !this.mongoose.isValidObjectId(chatId)) {
-      res.writeHead(400);
-      res.end();
-      return;
-    }
-
-    /**
-     * Find all the messages of the specific chat,
-     * along with the users who sent them.
-     */
-    let messages = await Message.find({ chat: chatId }).populate("user");
-
-    messages = messages.map(message => message.toClientObject());
-
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(messages));
+  getChatMessages(res, chatId) {
+    this.mainWorker
+      .send({
+        op: "getChatMessages",
+        chatId
+      })
+      .then(message => {
+        res.writeHead(message.statusCode, message.contentType);
+        res.end(message.payload);
+      });
   }
 
   /**
-   * Post a message of a specific user in a specific chat, after finding the chat and the user in the database
-   * and respond with the said message.
-   * Emit to every websocket in the chat room that a message has just been posted,
+   * Passes the job of posting a message of a specific user in a specific chat to a worker.
+   * Emits to every websocket in the chat room that a message has just been posted,
    * along with the said message.
-   * Finish by emitting to every websocket in the chat room that a user has stopped typing,
+   * Also emits to every websocket in the chat room that a user has stopped typing,
    * along with the said user.
-   * If any form fields are missing, respond with 400.
-   * If the chat or the user was not found, respond with 404.
    * @param {Request} req The HTTP request.
    * @param {Response} res The HTTP response.
    * @param {String} chatId The id of the specific chat.
@@ -136,67 +101,35 @@ module.exports = class ChatRouteManager extends RouteManager {
    */
   async postChatMessage(req, res, chatId) {
     let fields = await this.parseFormFields(req);
-    let userId = fields.userId;
-    let messageContent = fields.messageContent;
 
-    if (
-      !chatId ||
-      !this.mongoose.isValidObjectId(chatId) ||
-      !userId ||
-      !this.mongoose.isValidObjectId(userId) ||
-      !messageContent
-    ) {
-      res.writeHead(400);
-      res.end();
-      return;
-    }
+    this.mainWorker
+      .send({
+        op: "postChatMessage",
+        chatId,
+        userId: fields.userId,
+        messageContent: fields.messageContent
+      })
+      .then(message => {
+        res.writeHead(message.statusCode, message.contentType);
+        res.end(message.payload);
 
-    /**
-     * Find the specific chat in the database,
-     * with all its users.
-     */
-    let chat = await Chat.findById(chatId).populate("users");
-    if (!chat) {
-      res.writeHead(404);
-      res.end();
-      return;
-    }
+        let chatMessage = message.chatMessage;
+        if (chatMessage) {
+          /** Emit to every websocket in the chat room that a message has just been posted. */
+          this.socket.io.to(chatId).emit("messagePosted", chatMessage);
+        }
 
-    /**
-     * Check whether the specific user
-     * is in the chat.
-     */
-    let user = chat.users.find(user => user._id.toString() === userId);
-    if (!user) {
-      res.writeHead(404);
-      res.end();
-      return;
-    }
-
-    let message = new Message({
-      content: messageContent,
-      chat: chat._id,
-      user: user._id
-    });
-    await message.save();
-
-    message.user = user;
-
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(message.toClientJSON());
-
-    /** Emit to every websocket in the chat room that a message has just been posted. */
-    this.socket.io.to(chatId).emit("messagePosted", message.toClientObject());
-
-    /** Emit to every websocket in the chat room that a user has stopped typing. */
-    this.socket.io.to(chatId).emit("userStoppedTyping", user.toClientObject());
+        let user = message.user;
+        if (user) {
+          /** Emit to every websocket in the chat room that a user has stopped typing. */
+          this.socket.io.to(chatId).emit("userStoppedTyping", user);
+        }
+      });
   }
 
   /**
-   * Emit to every websocket in the chat room that a user has started typing, along with the said user,
-   * after finding the specific chat and the specific user in the database.
-   * If any form fields are missing, respond with 400.
-   * If the chat or the user was not found, respond with 404.
+   * Passes the job of confirming that a user who is currently typing, exists in the chat, to a worker.
+   * Emits to every websocket in the chat room that a user has started typing, along with the said user.
    * @param {Request} req The HTTP request.
    * @param {Response} res The HTTP response.
    * @param {String} chatId The id of the specific chat.
@@ -204,53 +137,28 @@ module.exports = class ChatRouteManager extends RouteManager {
    */
   async postChatUserTyping(req, res, chatId) {
     let fields = await this.parseFormFields(req);
-    let userId = fields.userId;
 
-    if (
-      !chatId ||
-      !this.mongoose.isValidObjectId(chatId) ||
-      !userId ||
-      !this.mongoose.isValidObjectId(userId)
-    ) {
-      res.writeHead(400);
-      res.end();
-      return;
-    }
+    this.mainWorker
+      .send({
+        op: "postChatUserTyping",
+        chatId,
+        userId: fields.userId
+      })
+      .then(message => {
+        res.writeHead(message.statusCode);
+        res.end();
 
-    /**
-     * Find the specific chat in the database,
-     * with all its users.
-     */
-    let chat = await Chat.findById(chatId).populate("users");
-    if (!chat) {
-      res.writeHead(404);
-      res.end();
-      return;
-    }
-
-    /**
-     * Check whether the specific user
-     * is in the chat.
-     */
-    let user = chat.users.find(user => user._id.toString() === userId);
-    if (!user) {
-      res.writeHead(404);
-      res.end();
-      return;
-    }
-
-    res.writeHead(204);
-    res.end();
-
-    /** Emit to every websocket in the chat room that a user has started typing. */
-    this.socket.io.to(chatId).emit("userStartedTyping", user.toClientObject());
+        let user = message.user;
+        if (user) {
+          /** Emit to every websocket in the chat room that a user has started typing. */
+          this.socket.io.to(chatId).emit("userStartedTyping", user);
+        }
+      });
   }
 
   /**
-   * Create a new chat with a unique name, after finding the user in the database and respond with the said chat.
-   * Finish by emitting to every websocket that a new chat has just been created, along with the said chat.
-   * If any form fields are missing or a chat with that name already exists, respond with 400 and any validation message(s).
-   * If the user was not found, respond with 404.
+   * Passes the job of creating a new chat with a unique name to a worker.
+   * Emits to every websocket that a new chat has just been created, along with the said chat.
    * @param {Request} req The HTTP request.
    * @param {Response} res The HTTP response.
    * @param {String} chatId The id of the specific chat.
@@ -258,38 +166,22 @@ module.exports = class ChatRouteManager extends RouteManager {
    */
   async createChat(req, res) {
     let fields = await this.parseFormFields(req);
-    let userId = fields.userId;
-    let chatName = fields.chatName;
 
-    if (!userId || !this.mongoose.isValidObjectId(userId) || !chatName) {
-      res.writeHead(400);
-      res.end(JSON.stringify({ errors: { params: "Missing parameters" } }));
-      return;
-    }
+    this.mainWorker
+      .send({
+        op: "createChat",
+        userId: fields.userId,
+        chatName: fields.chatName
+      })
+      .then(message => {
+        res.writeHead(message.statusCode, message.contentType);
+        res.end(message.payload);
 
-    let existingChat = await Chat.findOne({ name: chatName });
-    if (existingChat) {
-      res.writeHead(400, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ errors: { chatName: "Chat already exists" } }));
-      return;
-    }
-
-    let user = await User.findById(userId);
-    if (!user) {
-      res.writeHead(404);
-      res.end(JSON.stringify({ errors: { user: "User not found" } }));
-      return;
-    }
-
-    let chat = new Chat({
-      name: chatName
-    });
-    await chat.save();
-
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(chat.toClientJSON());
-
-    /** Emit to every websocket that a new chat has been created. */
-    this.socket.io.emit("chatCreated", chat.toClientObject());
+        let chat = message.chat;
+        if (chat) {
+          /** Emit to every websocket that a new chat has been created. */
+          this.socket.io.emit("chatCreated", chat);
+        }
+      });
   }
 };
