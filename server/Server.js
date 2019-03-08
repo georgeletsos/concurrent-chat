@@ -2,7 +2,7 @@
 
 const http = require("http");
 const path = require("path");
-const MainWorker = require("./workers/main/MainWorker");
+const MainWorkerPool = require("./workers/main/MainWorkerPool");
 const Socket = require("./Socket");
 const StaticRouteManager = require("./routes/StaticRouteManager");
 const AuthRouteManager = require("./routes/AuthRouteManager");
@@ -12,18 +12,18 @@ const ChatRouteManager = require("./routes/api/ChatRouteManager");
 module.exports = class Server {
   constructor() {
     let workerPath = path.join(__dirname, "workers", "threads", "index.js");
-    this.mainWorker = new MainWorker(workerPath);
+    this.mainWorkerPool = new MainWorkerPool(workerPath);
 
-    this.mainWorker.send({ op: "connectMongo" }).then(async () => {
+    this.mainWorkerPool.connectMongo().then(async () => {
       console.log("Everyone is connected to MongoDB");
 
       /** Day(s) * Hour(s) * Minute(s) * Second(s) * 1000 */
-      let twoWeeksInMilliSeconds = 2 * 60 * 1e3;
+      let twoWeeksInMilliSeconds = 14 * 24 * 60 * 60 * 1e3;
 
       await Promise.all([
-        this.mainWorker.send({ op: "createGeneralChatIfNotExists" }),
-        this.mainWorker.send({ op: "clearChatsFromUsers" }),
-        this.mainWorker.send({
+        this.mainWorkerPool.send({ op: "createGeneralChatIfNotExists" }),
+        this.mainWorkerPool.send({ op: "clearChatsFromUsers" }),
+        this.mainWorkerPool.send({
           op: "deleteMessagesAndUnusedChatsSince",
           sinceTime: twoWeeksInMilliSeconds
         })
@@ -34,20 +34,23 @@ module.exports = class Server {
        * every 2 weeks.
        */
       setInterval(() => {
-        this.mainWorker.send({
+        this.mainWorkerPool.send({
           op: "deleteMessagesAndUnusedChatsSince",
           sinceTime: twoWeeksInMilliSeconds
         });
       }, twoWeeksInMilliSeconds);
 
-      this.socket = new Socket(this.mainWorker);
+      this.socket = new Socket(this.mainWorkerPool);
 
       /** Register the auth routes. */
-      let authRouteManager = new AuthRouteManager(this.mainWorker);
+      let authRouteManager = new AuthRouteManager(this.mainWorkerPool);
       let authRoutes = authRouteManager.routes;
 
       /** Register the api chat routes. */
-      let chatRouteManager = new ChatRouteManager(this.mainWorker, this.socket);
+      let chatRouteManager = new ChatRouteManager(
+        this.mainWorkerPool,
+        this.socket
+      );
       let chatRoutes = chatRouteManager.routes;
 
       /** Register the static routes. */

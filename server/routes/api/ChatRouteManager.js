@@ -3,11 +3,11 @@ const RouteManager = require("../RouteManager");
 /** Class that registers all the api chat routes and handlers. */
 module.exports = class ChatRouteManager extends RouteManager {
   /**
-   * @param {MainWorker} mainWorker Our mainWorker instance.
+   * @param {MainWorkerPool} mainWorkerPool Our mainWorkerPool instance.
    * @param {Socket} socket Our socket instance.
    */
-  constructor(mainWorker, socket) {
-    super(mainWorker, socket);
+  constructor(mainWorkerPool, socket) {
+    super(mainWorkerPool, socket);
 
     this.registerRoutes();
   }
@@ -44,7 +44,7 @@ module.exports = class ChatRouteManager extends RouteManager {
    * @param {Response} res The HTTP response.
    */
   getChats(res) {
-    this.mainWorker
+    this.mainWorkerPool
       .send({
         op: "getChats"
       })
@@ -60,7 +60,7 @@ module.exports = class ChatRouteManager extends RouteManager {
    * @param {String} chatId The id of the specific chat.
    */
   getChatUsers(res, chatId) {
-    this.mainWorker
+    this.mainWorkerPool
       .send({
         op: "getChatUsers",
         chatId
@@ -77,7 +77,7 @@ module.exports = class ChatRouteManager extends RouteManager {
    * @param {String} chatId The id of the specific chat.
    */
   getChatMessages(res, chatId) {
-    this.mainWorker
+    this.mainWorkerPool
       .send({
         op: "getChatMessages",
         chatId
@@ -102,7 +102,7 @@ module.exports = class ChatRouteManager extends RouteManager {
   async postChatMessage(req, res, chatId) {
     let fields = await this.parseFormFields(req);
 
-    this.mainWorker
+    this.mainWorkerPool
       .send({
         op: "postChatMessage",
         chatId,
@@ -138,7 +138,7 @@ module.exports = class ChatRouteManager extends RouteManager {
   async postChatUserTyping(req, res, chatId) {
     let fields = await this.parseFormFields(req);
 
-    this.mainWorker
+    this.mainWorkerPool
       .send({
         op: "postChatUserTyping",
         chatId,
@@ -167,7 +167,7 @@ module.exports = class ChatRouteManager extends RouteManager {
   async createChat(req, res) {
     let fields = await this.parseFormFields(req);
 
-    this.mainWorker
+    this.mainWorkerPool
       .send({
         op: "createChat",
         userId: fields.userId,

@@ -9,16 +9,25 @@ const ThreadWorker = require("./ThreadWorker");
  */
 const threadWorker = new ThreadWorker();
 
+/**
+ * Connect to MongoDB.
+ */
 threadWorker.registerJob("connectMongo", () => {
   return mongoose.connect().then(() => {
-    console.log("Worker connected to MongoDB");
+    console.log(`Worker ${process.pid} connected to MongoDB`);
   });
 });
 
+/**
+ * Create #general-chat if it does't exist.
+ */
 threadWorker.registerJob("createGeneralChatIfNotExists", () => {
   return Chat.createGeneralChatIfNotExists();
 });
 
+/**
+ * Remove any users from every chat.
+ */
 threadWorker.registerJob("clearChatsFromUsers", () => {
   return Chat.clearChatsFromUsers();
 });

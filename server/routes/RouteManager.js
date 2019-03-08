@@ -4,11 +4,11 @@ const Formidable = require("formidable");
 /** Class that registers routes and handlers. */
 module.exports = class RouteManager {
   /**
-   * @param {MainWorker} mainWorker Our mainWorker instance.
+   * @param {MainWorkerPool} mainWorkerPool Our mainWorkerPool instance.
    * @param {Socket} socket Our socket instance.
    */
-  constructor(mainWorker, socket) {
-    this.mainWorker = mainWorker;
+  constructor(mainWorkerPool, socket) {
+    this.mainWorkerPool = mainWorkerPool;
     this.socket = socket;
 
     /**

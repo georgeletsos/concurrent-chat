@@ -3,10 +3,10 @@ const SocketIo = require("socket.io");
 /** Class representing our Socket implementation. */
 module.exports = class Socket {
   /**
-   * @param {MainWorker} mainWorker Our mainWorker instance.
+   * @param {MainWorkerPool} mainWorkerPool Our mainWorkerPool instance.
    */
-  constructor(mainWorker) {
-    this.mainWorker = mainWorker;
+  constructor(mainWorkerPool) {
+    this.mainWorkerPool = mainWorkerPool;
 
     this.onConnect = this.onConnect.bind(this);
     this.onDisconnect = this.onDisconnect.bind(this);
@@ -38,7 +38,7 @@ module.exports = class Socket {
     let chatId = socket.handshake.query.chatId;
     let userId = socket.handshake.query.userId;
 
-    this.mainWorker
+    this.mainWorkerPool
       .send({ op: "socketOnConnect", chatId, userId })
       .then(message => {
         /** Add the websocket to the room of the chat. */
@@ -66,7 +66,7 @@ module.exports = class Socket {
    * @param {User} userId
    */
   onDisconnect(chatId, userId) {
-    this.mainWorker
+    this.mainWorkerPool
       .send({ op: "socketOnDisconnect", chatId, userId })
       .then(message => {
         let user = message.user;
