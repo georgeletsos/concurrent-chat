@@ -1,17 +1,22 @@
 const cp = require("child_process");
+const numCPUs = require("os").cpus().length || 1;
 
-/** Class representing a web worker instance of the main thread. */
-module.exports = class MainWorker {
+/** Class representing a pool of child processes/workers of the main thread. */
+module.exports = class WorkerPool {
   /**
    * @param {String} modulePath
    */
   constructor(modulePath) {
-    this.worker = cp.fork(modulePath);
+    this.workers = [];
     this.callbacks = [];
-    this.generateId = this.idGenerator();
-
     this.onMessage = this.onMessage.bind(this);
-    this.worker.on("message", this.onMessage);
+    this.generateId = this.idGenerator();
+    this.getNextWorker = this.workerCircularSequence();
+
+    for (let i = 0; i < numCPUs; i++) {
+      this.workers.push(cp.fork(modulePath));
+      this.workers[i].on("message", this.onMessage);
+    }
   }
 
   /**
@@ -23,6 +28,18 @@ module.exports = class MainWorker {
 
     while (true) {
       yield id++;
+    }
+  }
+
+  /**
+   * Infinite circular sequence of workers.
+   * @yields {ChildProcess} A child process/worker.
+   */
+  *workerCircularSequence() {
+    while (true) {
+      for (let i = 0; i < this.workers.length; i++) {
+        yield this.workers[i];
+      }
     }
   }
 
@@ -50,13 +67,15 @@ module.exports = class MainWorker {
   }
 
   /**
-   * Passes a job to the worker thread.
+   * Passes a job to a worker thread.
    * Saves a callback, matched to an id,
    * so that it knows what to do when the worker thread passes back the result.
    * @param {Object} message
    * @returns {Promise} A promise that is resolved with the result or rejected with an error.
    */
   send(message) {
+    let worker = this.getNextWorker.next().value;
+
     let id = this.generateId.next().value;
     message.id = id;
 
@@ -71,7 +90,7 @@ module.exports = class MainWorker {
         }
       });
 
-      this.worker.send(message);
+      worker.send(message);
     });
   }
 };

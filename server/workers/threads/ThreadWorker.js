@@ -15,6 +15,8 @@ module.exports = class ThreadWorker {
    * @param {Object} message
    */
   onMessage(message) {
+    console.log(`Worker ${process.pid} got message =>`, message.op);
+
     let op = message.op;
     this.work(op, message);
   }
@@ -39,12 +41,7 @@ module.exports = class ThreadWorker {
     }
 
     Promise.resolve(result)
-      .then(data =>
-        process.send({
-          id,
-          data
-        })
-      )
+      .then(data => process.send({ id, data }))
       .catch(error => process.send({ id, error }));
   }
 
