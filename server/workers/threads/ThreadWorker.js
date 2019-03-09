@@ -15,8 +15,6 @@ module.exports = class ThreadWorker {
    * @param {Object} message
    */
   onMessage(message) {
-    console.log(`Worker ${process.pid} got message =>`, message.op);
-
     let op = message.op;
     this.work(op, message);
   }
