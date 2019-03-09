@@ -12,10 +12,8 @@ const threadWorker = new ThreadWorker();
 /**
  * Connect to MongoDB.
  */
-threadWorker.registerJob("connectMongo", () => {
-  return mongoose.connect().then(() => {
-    console.log(`Worker ${process.pid} connected to MongoDB`);
-  });
+mongoose.connect().then(() => {
+  console.log(`Worker ${process.pid} connected to MongoDB`);
 });
 
 /**
