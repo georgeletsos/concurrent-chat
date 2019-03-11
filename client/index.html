@@ -3,6 +3,7 @@
   <head>
     <title></title>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
 
     <link
       href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css"
@@ -29,7 +30,7 @@
   </head>
 
   <body>
-    <div class="mx-auto h-screen container">
+    <div class="sm:p-10 sm:mx-auto w-screen h-screen container">
       <!-- Register -->
       <div
         id="register-container"
@@ -66,12 +67,15 @@
         </form>
       </div>
 
-      <!-- Chat UI -->
-      <div id="app-container" class="h-full flex rounded-lg shadow-md hidden">
+      <!-- App UI -->
+      <div
+        id="app-container"
+        class="h-full sm:flex sm:rounded-lg sm:shadow-sm hidden"
+      >
         <!-- Chats list -->
         <div
           id="chats-container"
-          class="w-1/5 bg-grey-darkest flex flex-col rounded-l-lg"
+          class="w-4/5 h-full sm:w-1/5 fixed sm:static pin-t pin-l bg-grey-darkest flex flex-col sm:rounded-l-lg transition-transform-2 translate-self-left sm:translate-x-none z-50"
         >
           <ul
             id="chats"
@@ -91,7 +95,7 @@
           </form>
 
           <div
-            class="px-4 py-2 bg-black flex justify-between items-center rounded-bl-lg"
+            class="px-4 py-2 bg-black flex justify-between items-center sm:rounded-bl-lg"
           >
             <div>
               <div
@@ -106,16 +110,23 @@
               class="p-2 hover:bg-grey-darker focus:outline-none"
             >
               <div
-                class="w-6 h-6 bg-contain plus-sign transition-transform-1"
+                class="w-6 h-6 bg-contain plus-sign-icon transition-transform-1"
               ></div>
             </button>
           </div>
+
+          <button
+            id="show-chats-container-btn"
+            class="p-1 absolute sm:hidden pin-t pin-r translate-self-right bg-grey-darkest hover:bg-black rounded-br-lg focus:outline-none"
+          >
+            <div class="w-6 h-6 bg-contain chats-icon"></div>
+          </button>
         </div>
 
         <!-- Instructions -->
         <div
           id="instructions-container"
-          class="w-4/5 bg-grey-darker flex flex-col items-center justify-center rounded-r-lg hidden"
+          class="w-full h-full sm:w-4/5 bg-grey-darker flex flex-col items-center justify-center sm:rounded-r-lg hidden"
         >
           <!-- No Chat Message -->
           <div
@@ -145,7 +156,7 @@
         <!-- Messages -->
         <div
           id="messages-container"
-          class="w-3/5 bg-grey-darker flex flex-col hidden"
+          class="w-full h-full sm:w-3/5 bg-grey-darker flex flex-col hidden"
         >
           <ul
             id="messages"
@@ -182,9 +193,16 @@
         <!-- Users list -->
         <div
           id="users-container"
-          class="w-1/5 bg-grey-darkest rounded-r-lg hidden"
+          class="w-4/5 h-full sm:w-1/5 fixed sm:static pin-t pin-r bg-grey-darkest sm:rounded-r-lg transition-transform-2 translate-self-right sm:translate-x-none z-50 hidden"
         >
           <ul id="users" class="px-8 pt-2 h-full list-reset overflow-auto"></ul>
+
+          <button
+            id="show-users-container-btn"
+            class="p-1 absolute sm:hidden pin-t pin-l translate-self-left bg-grey-darkest hover:bg-black rounded-bl-lg focus:outline-none"
+          >
+            <div class="w-6 h-6 bg-contain users-icon"></div>
+          </button>
         </div>
       </div>
     </div>
