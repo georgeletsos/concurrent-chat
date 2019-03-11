@@ -154,7 +154,7 @@ class MessageListUi extends UiComponent {
       "bg-contain",
       "bg-center",
       "bg-no-repeat",
-      "arrow-right"
+      "arrow-right-icon"
     );
 
     $li.appendChild($arrow);
@@ -223,7 +223,7 @@ class MessageListUi extends UiComponent {
       "bg-contain",
       "bg-center",
       "bg-no-repeat",
-      "arrow-right",
+      "arrow-right-icon",
       "rotate-180"
     );
 

@@ -12,18 +12,29 @@ class UserListUi extends UiComponent {
 
     this.chatId = chatId;
 
+    this.onShowButtonClick = this.onShowButtonClick.bind(this);
+    this.onOutsideClick = this.onOutsideClick.bind(this);
     this.onSocketUserConnected = this.onSocketUserConnected.bind(this);
     this.onSocketUserDisconnected = this.onSocketUserDisconnected.bind(this);
 
+    this.showClass = "translate-self-right";
+    this.showIconClass = "users-icon";
+    this.hideIconClass = "x-sign-icon";
+
     /** Main DOM elements of component. */
     this.$users = document.getElementById("users");
+    this.$showButton = document.getElementById("show-users-container-btn");
+    this.$icon = this.$showButton.querySelector("div");
   }
 
   /**
-   * Initializes the component, by setting up socket event listeners
-   * and drawing the list of current chat's users.
+   * Initializes the component, by setting up the show button click, outside click
+   * and socket event listeners while drawing the list of current chat's users.
    */
   init() {
+    this.$showButton.addEventListener("click", this.onShowButtonClick);
+    document.addEventListener("click", this.onOutsideClick);
+
     this.setUpSocketEventListeners();
 
     /** Make an API call to get the list of current chat's users. */
@@ -36,6 +47,38 @@ class UserListUi extends UiComponent {
         this.drawUsers(users);
         this.show();
       });
+  }
+
+  /**
+   * Called when the show button is clicked.
+   * Shows/hides the component and swaps the icon.
+   */
+  onShowButtonClick() {
+    this.$mainContainer.classList.toggle(this.showClass);
+    this.$icon.classList.toggle(this.showIconClass);
+    this.$icon.classList.toggle(this.hideIconClass);
+  }
+
+  /**
+   * Called when a click on the outside of the component occurs.
+   * Hides the component and swaps the icon.
+   * @param {Event} e
+   */
+  onOutsideClick(e) {
+    if (
+      e.target.closest("#" + this.$mainContainer.id) === this.$mainContainer
+    ) {
+      return;
+    }
+
+    if (!this.$mainContainer.classList.contains(this.showClass)) {
+      this.$mainContainer.classList.add(this.showClass);
+    }
+
+    if (this.$icon.classList.contains(this.hideIconClass)) {
+      this.$icon.classList.remove(this.hideIconClass);
+      this.$icon.classList.add(this.showIconClass);
+    }
   }
 
   setUpSocketEventListeners() {

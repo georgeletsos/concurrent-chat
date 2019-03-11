@@ -101,6 +101,10 @@
   transition: transform 0.25s;
 }
 
+.transition-transform-2 {
+  transition: transform 0.5s;
+}
+
 .rotate-45 {
   transform: rotate(45deg);
 }
@@ -109,13 +113,22 @@
   transform: rotate(180deg);
 }
 
-.hidden {
-  display: none !important;
+.translate-self-left {
+  transform: translateX(-100%);
 }
 
-.container {
-  padding-top: 16.66667vh;
-  padding-bottom: 16.66667vh;
+.translate-self-right {
+  transform: translateX(100%);
+}
+
+@media (min-width: 576px) {
+  .sm\:translate-x-none {
+    transform: translateX(0);
+  }
+}
+
+.hidden {
+  display: none !important;
 }
 
 body {
@@ -177,8 +190,10 @@ textarea {
 
 /* Register */
 
-#register-container form {
-  width: 480px;
+@media (min-width: 576px) {
+  #register-container form {
+    width: 480px;
+  }
 }
 
 /* Pulse animation */
@@ -234,10 +249,22 @@ textarea {
 
 /* SVG */
 
-.arrow-right {
+.arrow-right-icon {
   background-image: url("/img/arrow-right.svg");
 }
 
-.plus-sign {
+.plus-sign-icon {
   background-image: url("/img/plus-sign.svg");
+}
+
+.chats-icon {
+  background-image: url("/img/chats.svg");
+}
+
+.users-icon {
+  background-image: url("/img/users.svg");
+}
+
+.x-sign-icon {
+  background-image: url("/img/x-sign.svg");
 }
