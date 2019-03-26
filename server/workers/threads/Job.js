@@ -1,4 +1,4 @@
-/** Class representing a web worker instance of a thread. */
+/** Class representing a job of a web worker instance of a thread. */
 module.exports = class Job {
   /**
    * @param {String} op The operation name.
