@@ -1,4 +1,4 @@
-/* eslint no-unused-vars: ["error", { "varsIgnorePattern": "ThreadWorker" }] */
+const Job = require("./Job");
 
 /** Class representing a web worker instance of a thread. */
 module.exports = class ThreadWorker {
@@ -17,6 +17,15 @@ module.exports = class ThreadWorker {
   onMessage(message) {
     let op = message.op;
     this.work(op, message);
+  }
+
+  /**
+   * Registers a job with an operation name.
+   * @param {String} op The operation name.
+   * @param {Function} callback The function to be called when done.
+   */
+  registerJob(op, callback) {
+    this.jobs.push(new Job(op, callback));
   }
 
   /**
@@ -41,14 +50,5 @@ module.exports = class ThreadWorker {
     Promise.resolve(result)
       .then(data => process.send({ id, data }))
       .catch(error => process.send({ id, error }));
-  }
-
-  /**
-   * Registers a job with an operation name.
-   * @param {String} op The operation name.
-   * @param {Function} callback The function to be called when done.
-   */
-  registerJob(op, callback) {
-    this.jobs.push({ op, callback });
   }
 };
