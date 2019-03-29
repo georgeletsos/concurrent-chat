@@ -1,5 +1,4 @@
 const Mongoose = require("../Mongoose");
-
 const User = require("./User");
 
 const chatSchema = new Mongoose.Schema(

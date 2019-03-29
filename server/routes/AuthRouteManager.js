@@ -3,7 +3,7 @@ const RouteManager = require("./RouteManager");
 /** Class that registers all the auth routes and handlers. */
 module.exports = class AuthRouteManager extends RouteManager {
   /**
-   * @param {MainWorkerPool} mainWorkerPool Our mongoose instance.
+   * @param {MainWorkerPool} mainWorkerPool Our mainWorkerPool instance.
    */
   constructor(mainWorkerPool) {
     super(mainWorkerPool);
@@ -19,7 +19,7 @@ module.exports = class AuthRouteManager extends RouteManager {
       this.registerUser(req, res)
     );
 
-    this.post(/^\/api\/auth\/login$/i, (req, res) => this.loginUser(req, res));
+    this.post(/^\/api\/auth\/login$/i, (req, res) => this.logInUser(req, res));
   }
 
   /**
@@ -48,7 +48,7 @@ module.exports = class AuthRouteManager extends RouteManager {
    * @param {Response} res The HTTP response.
    * @async
    */
-  async loginUser(req, res) {
+  async logInUser(req, res) {
     let fields = await this.parseFormFields(req);
 
     this.mainWorkerPool
