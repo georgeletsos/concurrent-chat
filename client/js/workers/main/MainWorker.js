@@ -3,10 +3,10 @@
 /** Class representing a web worker instance of the main thread. */
 class MainWorker {
   /**
-   * @param {Worker} worker
+   * @param {String} workerURL
    */
-  constructor(worker) {
-    this.worker = worker;
+  constructor(workerURL) {
+    this.worker = new Worker(workerURL);
     this.callbacks = [];
     this.generateId = this.idGenerator();
 
