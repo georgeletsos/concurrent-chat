@@ -3,8 +3,8 @@
 
 /** Our implementation of the MainWorker class. */
 class AppWorker extends MainWorker {
-  constructor(worker) {
-    super(worker);
+  constructor(workerURL) {
+    super(workerURL);
   }
 
   /**
