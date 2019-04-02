@@ -1,3 +1,4 @@
+/* global Job */
 /* eslint no-unused-vars: ["error", { "varsIgnorePattern": "ThreadWorker" }] */
 
 /** Class representing a web worker instance of a thread. */
@@ -18,6 +19,15 @@ class ThreadWorker {
     let message = e.data;
     let op = message.op;
     this.work(op, message);
+  }
+
+  /**
+   * Registers a job with an operation name.
+   * @param {String} op The operation name.
+   * @param {Function} callback The function to be called when done.
+   */
+  registerJob(op, callback) {
+    this.jobs.push(new Job(op, callback));
   }
 
   /**
@@ -47,14 +57,5 @@ class ThreadWorker {
         })
       )
       .catch(error => postMessage({ id, error }));
-  }
-
-  /**
-   * Registers a job with an operation name.
-   * @param {String} op The operation name.
-   * @param {Function} callback The function to be called when done.
-   */
-  registerJob(op, callback) {
-    this.jobs.push({ op, callback });
   }
 }

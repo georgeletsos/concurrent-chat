@@ -4,7 +4,7 @@
  * Create the app state manager, the worker thread
  * and register jobs below.
  */
-importScripts("./App.js", "./ThreadWorker.js");
+importScripts("./App.js", "./ThreadWorker.js", "./Job.js");
 const app = new App();
 const threadWorker = new ThreadWorker();
 

@@ -1,4 +1,4 @@
-/* global MainWorker*/
+/* global MainWorker */
 /* eslint no-unused-vars: ["error", { "varsIgnorePattern": "AppWorker" }] */
 
 /** Our implementation of the MainWorker class. */
