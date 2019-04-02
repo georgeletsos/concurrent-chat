@@ -4,7 +4,7 @@
   class Main {
     constructor() {
       /** Creates the appWorker instance that UI components are going to use. */
-      this.appWorker = new AppWorker("/js/workers/thread/worker.js");
+      this.appWorker = new AppWorker("/js/workers/thread/index.js");
 
       this.registerUi = new RegisterUi(this.appWorker);
       this.onUserRegistered = this.onUserRegistered.bind(this);
