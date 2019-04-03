@@ -1,10 +1,10 @@
-/* global importScripts, App, ThreadWorker, io */
+/* global importScripts, App, TypingUser, ThreadWorker, io */
 
 /**
  * Create the app state manager, the worker thread
  * and register jobs below.
  */
-importScripts("./App.js", "./ThreadWorker.js", "./Job.js");
+importScripts("./App.js", "./TypingUser.js", "./ThreadWorker.js", "./Job.js");
 const app = new App();
 const threadWorker = new ThreadWorker();
 
@@ -170,20 +170,15 @@ threadWorker.registerJob("connectSocket", () => {
   /**
    * Called when a user has been connected to the chat.
    * Adds the user to the list of users in memory and sorts the list alphabetically, followed by tag.
-   * Afterwards finds the index of the user in memory and proceeds to find the next user in line.
    * Informs the main thread that a user has just been connected, along with who that user
    * and the next user are.
    */
   socket.on("userConnected", function(user) {
     app.addUser(user);
 
-    let users = app.sortUsers(App.sortByNameAndTag);
+    app.sortUsers(App.sortByNameAndTag);
 
-    let userIndex = app.findUserIndexById(user.id);
-    let nextUser;
-    if (userIndex > -1) {
-      nextUser = users[userIndex + 1];
-    }
+    let nextUser = app.findNextUser(user.id);
 
     postMessage({
       event: "userConnected",
@@ -194,14 +189,11 @@ threadWorker.registerJob("connectSocket", () => {
 
   /**
    * Called when a user has been disconnected.
-   * Finds the index of the user in memory and removes the user from the memory.
+   * Removes the user from the memory.
    * Informs the main thread that a user has just been disconnected, along with who that user is.
    */
   socket.on("userDisconnected", function(user) {
-    let userIndex = app.findUserIndexById(user.id);
-    if (userIndex > -1) {
-      app.removeUser(userIndex);
-    }
+    app.removeUserById(user.id);
 
     postMessage({
       event: "userDisconnected",
@@ -238,38 +230,28 @@ threadWorker.registerJob("connectSocket", () => {
 
   /**
    * Called when a user has started typing.
-   * If that user isn't the current one,
-   * adds the user to the list of users currently typing,
+   * If that user isn't the current one, adds the user to the list of users currently typing
    * along with that user timeout (that's going to remove that user from the list after some time).
-   * Informs the main thread that a user has started typing, along with the list of users currently typing.
+   * Informs the main thread that a user has started typing, along with the updated list of users currently typing.
    */
   socket.on("userStartedTyping", function(user) {
     if (app.currentUser.id === user.id) {
       return;
     }
 
-    /**
-     * @property {Object} user The user currently typing.
-     * @property {Timeout} timeout The user timeout that's going to remove the user from the list after some time.
-     */
-    let typingUserWithTimeout = {
-      user: user,
-      timeout: setTimeout(() => {
-        let typingUserIndex = app.findTypingUserIndexById(user.id);
-        if (typingUserIndex === -1) {
-          return;
-        }
-
-        app.removeTypingUser(typingUserIndex);
+    let typingUser = new TypingUser(
+      user,
+      setTimeout(() => {
+        app.removeTypingUserById(user.id);
 
         postMessage({
           event: "userTyping",
           typingUsers: app.getTypingUsers()
         });
       }, 10e3)
-    };
+    );
 
-    app.addTypingUser(typingUserWithTimeout);
+    app.addTypingUser(typingUser);
 
     postMessage({
       event: "userTyping",
@@ -279,19 +261,14 @@ threadWorker.registerJob("connectSocket", () => {
 
   /**
    * Called when a user has stopped typing.
-   * Finds the index of the user in memory and removes the user from the memory.
+   * Removes the user from the list of typing users in memory.
    * Also clears the user timeout (that was going to remove the user from the list after some time).
-   * Informs the main thread that a user has stopped typing, along with the list of users currently typing.
+   * Informs the main thread that a user has stopped typing, along with the updated list of users currently typing.
    */
   socket.on("userStoppedTyping", function(user) {
-    let typingUserIndex = app.findTypingUserIndexById(user.id);
-    if (typingUserIndex === -1) {
-      return;
-    }
+    let removedTypingUser = app.removeTypingUserById(user.id);
 
-    let removedTypingUserWithTimeout = app.removeTypingUser(typingUserIndex);
-
-    clearTimeout(removedTypingUserWithTimeout.timeout);
+    clearTimeout(removedTypingUser.timeout);
 
     postMessage({
       event: "userTyping",
