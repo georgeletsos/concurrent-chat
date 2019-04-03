@@ -7,14 +7,7 @@ class App {
     this.currentChat;
     this.chats = [];
     this.users = [];
-
-    /**
-     * List of users currently typing in memory.
-     * @property {Object[]} typingUserWithTimeout
-     * @property {Object} typingUserWithTimeout.user The user currently typing.
-     * @property {Timeout} typingUserWithTimeout.timeout The user timeout that's going to remove the user from the list.
-     */
-    this.typingUsersWithTimeout = [];
+    this.typingUsers = [];
   }
 
   /**
@@ -123,12 +116,23 @@ class App {
   }
 
   /**
-   * Removes a user.
-   * @param {number} userIndex The index of the user.
+   * Removes a user after finding him by his id.
+   * @param {Number} userId The id of the user.
    * @returns {Object} The removed user.
    */
-  removeUser(userIndex) {
+  removeUserById(userId) {
+    let userIndex = this.findUserIndexById(userId);
     return this.users.splice(userIndex, 1)[0];
+  }
+
+  /**
+   * Finds the index of the user in memory and then finds the next user in line.
+   * @param {Number} userId The id of the user.
+   * @returns {Object} The next user in line.
+   */
+  findNextUser(userId) {
+    let userIndex = this.findUserIndexById(userId);
+    return userIndex > -1 ? this.users[userIndex + 1] : "";
   }
 
   /**
@@ -137,7 +141,7 @@ class App {
    * @returns {Object[]} The sorted users array.
    */
   sortUsers(compareFn) {
-    return this.users.sort(compareFn);
+    this.users.sort(compareFn);
   }
 
   /**
@@ -153,16 +157,17 @@ class App {
    * @param {Object} typingUser
    */
   addTypingUser(typingUser) {
-    this.typingUsersWithTimeout.push(typingUser);
+    this.typingUsers.push(typingUser);
   }
 
   /**
-   * Removes a user currently typing.
-   * @param {number} typingUserIndex The index of the typing user.
+   * Removes a user currently typing after finding him by his id.
+   * @param {Number} typingUserId The id of the typing user.
    * @returns {Object} The removed typing user.
    */
-  removeTypingUser(typingUserIndex) {
-    return this.typingUsersWithTimeout.splice(typingUserIndex, 1)[0];
+  removeTypingUserById(typingUserId) {
+    let typingUserIndex = this.findTypingUserIndexById(typingUserId.id);
+    return this.typingUsers.splice(typingUserIndex, 1)[0];
   }
 
   /**
@@ -189,14 +194,14 @@ class App {
    * @returns {Number} The index of the specific user.
    */
   findTypingUserIndexById(userId) {
-    return this.typingUsersWithTimeout.findIndex(el => el.user.id === userId);
+    return this.typingUsers.findIndex(el => el.user.id === userId);
   }
 
   /**
-   * Extracts only the typing users, ignore the timeouts.
+   * Extracts only the typing users, while ignoring the timeouts.
    * @returns {Object[]} A list of typing users.
    */
   getTypingUsers() {
-    return this.typingUsersWithTimeout.map(el => el.user);
+    return this.typingUsers.map(el => el.user);
   }
 }
