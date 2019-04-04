@@ -7,14 +7,14 @@ class InstructionsUi extends UiComponent {
     super(document.getElementById("instructions-container"));
 
     /** Main DOM elements of component. */
-    this._$noChatContainer = document.getElementById("no-chat-container");
+    this.$noChatContainer = document.getElementById("no-chat-container");
   }
 
   showNoChatContainer() {
-    this._$noChatContainer.classList.remove("hidden");
+    this.$noChatContainer.classList.remove("hidden");
   }
 
   removeNoChatContainer() {
-    this._$noChatContainer.parentNode.removeChild(this._$noChatContainer);
+    this.$noChatContainer.parentNode.removeChild(this.$noChatContainer);
   }
 }
