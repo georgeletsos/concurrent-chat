@@ -101,7 +101,7 @@ class MessageFieldUi extends UiComponent {
   onFieldInput(e) {
     e.preventDefault();
 
-    this.changeFieldHeight(e);
+    this.changeFieldHeight(e.target);
 
     let message = e.target.value.trim();
     if (!message) {
@@ -115,11 +115,9 @@ class MessageFieldUi extends UiComponent {
    * Changes the field's height.
    * Since a textarea is being used, it needs to grow when a new line is added
    * and shrink when a line is removed.
-   * @param {Event} e
+   * @param {Element} $el
    */
-  changeFieldHeight(e) {
-    let $el = e.target;
-
+  changeFieldHeight($el) {
     /** Reset the height. */
     $el.style.height = "auto";
 
