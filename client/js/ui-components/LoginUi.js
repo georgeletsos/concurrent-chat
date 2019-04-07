@@ -19,26 +19,28 @@ class LoginUi extends UiComponent {
    * Finally emits an event about what happened.
    * @param {Object} user The user info object.
    */
-  async logInUser(user) {
+  logInUser(user) {
     /** Make an API call attempting to log in a user. */
-    let response = await this.appWorker.postMessage({
-      op: "logInUser",
-      user: user
-    });
+    this.appWorker
+      .postMessage({
+        op: "logInUser",
+        user: user
+      })
+      .then(response => {
+        let loggedIn;
+        if (response.errors) {
+          localStorage.removeItem("user");
+          loggedIn = false;
+        } else {
+          localStorage.setItem("user", JSON.stringify(user));
+          loggedIn = true;
+        }
 
-    let loggedIn;
-    if (response.errors) {
-      localStorage.removeItem("user");
-      loggedIn = false;
-    } else {
-      localStorage.setItem("user", JSON.stringify(user));
-      loggedIn = true;
-    }
+        let userLogInAttempt = new CustomEvent("userLogInAttempt", {
+          detail: { loggedIn: loggedIn, user: user }
+        });
 
-    let userLogInAttempt = new CustomEvent("userLogInAttempt", {
-      detail: { loggedIn: loggedIn, user: user }
-    });
-
-    document.dispatchEvent(userLogInAttempt);
+        document.dispatchEvent(userLogInAttempt);
+      });
   }
 }

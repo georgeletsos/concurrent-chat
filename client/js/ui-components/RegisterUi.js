@@ -60,39 +60,41 @@ class RegisterUi extends UiComponent {
 
     let username = this.$username.value.trim();
 
-    let registerOperation = async () => {
+    let registerOperation = () => {
       /** Make an API call attempting to register a new user. */
-      let response = await this.appWorker.postMessage({
-        op: "registerUser",
-        username: username
-      });
+      this.appWorker
+        .postMessage({
+          op: "registerUser",
+          username: username
+        })
+        .then(response => {
+          /** Hide the loading animation of the button. */
+          this.$buttonLoading.classList.add("hidden");
 
-      /** Hide the loading animation of the button. */
-      this.$buttonLoading.classList.add("hidden");
+          /** Show the button text. */
+          this.$buttonText.classList.remove("hidden");
 
-      /** Show the button text. */
-      this.$buttonText.classList.remove("hidden");
+          let errors = response.errors;
+          if (errors) {
+            let errorUsername = errors.username;
+            if (errorUsername) {
+              this.drawValidation(
+                errorUsername,
+                this.$username,
+                this.$usernameLabel
+              );
+            }
 
-      let errors = response.errors;
-      if (errors) {
-        let errorUsername = errors.username;
-        if (errorUsername) {
-          this.drawValidation(
-            errorUsername,
-            this.$username,
-            this.$usernameLabel
-          );
-        }
+            return;
+          }
 
-        return;
-      }
+          let user = response;
+          let userRegisteredEvent = new CustomEvent("userRegistered", {
+            detail: { user: user }
+          });
 
-      let user = response;
-      let userRegisteredEvent = new CustomEvent("userRegistered", {
-        detail: { user: user }
-      });
-
-      document.dispatchEvent(userRegisteredEvent);
+          document.dispatchEvent(userRegisteredEvent);
+        });
     };
 
     /** Give the loading animation half a second... (Doesn't look nice if it's too fast) */
