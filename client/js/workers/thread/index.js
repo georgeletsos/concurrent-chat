@@ -261,11 +261,15 @@ threadWorker.registerJob("connectSocket", () => {
 
   /**
    * Called when a user has stopped typing.
-   * Removes the user from the list of typing users in memory.
+   * If that user isn't the current one, removes the user from the list of typing users in memory.
    * Also clears the user timeout (that was going to remove the user from the list after some time).
    * Informs the main thread that a user has stopped typing, along with the updated list of users currently typing.
    */
   socket.on("userStoppedTyping", function(user) {
+    if (app.currentUser.id === user.id) {
+      return;
+    }
+
     let removedTypingUser = app.removeTypingUserById(user.id);
 
     clearTimeout(removedTypingUser.timeout);
