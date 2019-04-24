@@ -276,7 +276,9 @@ threadWorker.registerJob("connectSocket", () => {
 
     console.log(removedTypingUser);
 
-    clearTimeout(removedTypingUser.timeout);
+    if (removedTypingUser) {
+      clearTimeout(removedTypingUser.timeout);
+    }
 
     postMessage({
       event: "userTyping",
