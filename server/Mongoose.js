@@ -1,5 +1,6 @@
 const mongoose = require("mongoose").Mongoose;
-const mongoUrl = process.env.MONGODB_URI || "mongodb://localhost:27017/concurrent-chat";
+const mongoUrl =
+  process.env.MONGODB_URI || "mongodb://localhost:27017/concurrent-chat";
 
 /** Class representing our mongoose implementation. */
 class Mongoose extends mongoose {

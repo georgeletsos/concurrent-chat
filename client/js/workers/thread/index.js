@@ -270,7 +270,11 @@ threadWorker.registerJob("connectSocket", () => {
       return;
     }
 
+    console.log(app.getTypingUsers());
+
     let removedTypingUser = app.removeTypingUserById(user.id);
+
+    console.log(removedTypingUser);
 
     clearTimeout(removedTypingUser.timeout);
 
