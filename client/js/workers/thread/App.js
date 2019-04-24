@@ -166,7 +166,7 @@ class App {
    * @returns {Object} The removed typing user.
    */
   removeTypingUserById(typingUserId) {
-    let typingUserIndex = this.findTypingUserIndexById(typingUserId.id);
+    let typingUserIndex = this.findTypingUserIndexById(typingUserId);
     return typingUserIndex > -1
       ? this.typingUsers.splice(typingUserIndex, 1)[0]
       : null;
