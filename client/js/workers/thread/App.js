@@ -122,7 +122,7 @@ class App {
    */
   removeUserById(userId) {
     let userIndex = this.findUserIndexById(userId);
-    return this.users.splice(userIndex, 1)[0];
+    return userIndex > -1 ? this.users.splice(userIndex, 1)[0] : null;
   }
 
   /**
@@ -167,7 +167,9 @@ class App {
    */
   removeTypingUserById(typingUserId) {
     let typingUserIndex = this.findTypingUserIndexById(typingUserId.id);
-    return this.typingUsers.splice(typingUserIndex, 1)[0];
+    return typingUserIndex > -1
+      ? this.typingUsers.splice(typingUserIndex, 1)[0]
+      : null;
   }
 
   /**
