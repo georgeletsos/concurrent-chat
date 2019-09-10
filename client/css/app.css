@@ -121,7 +121,7 @@
   transform: translateX(100%);
 }
 
-@media (min-width: 576px) {
+@media (min-width: 640px) {
   .sm\:translate-x-none {
     transform: translateX(0);
   }
@@ -190,7 +190,7 @@ textarea {
 
 /* Register */
 
-@media (min-width: 576px) {
+@media (min-width: 640px) {
   #register-container form {
     width: 480px;
   }

@@ -75,7 +75,7 @@
         <!-- Chats list -->
         <div
           id="chats-container"
-          class="w-4/5 h-full sm:w-1/5 fixed sm:static pin-t pin-l bg-grey-darkest flex flex-col sm:rounded-l-lg transition-transform-2 translate-self-left sm:translate-x-none z-50"
+          class="w-4/5 h-full sm:w-1/5 fixed sm:static top-0 left-0 bg-grey-darkest flex flex-col sm:rounded-l-lg transition-transform-2 translate-self-left sm:translate-x-none z-50"
         >
           <ul
             id="chats"
@@ -117,7 +117,7 @@
 
           <button
             id="show-chats-container-btn"
-            class="p-1 absolute sm:hidden pin-t pin-r translate-self-right bg-grey-darkest hover:bg-black rounded-br-lg focus:outline-none"
+            class="p-1 absolute sm:hidden top-0 right-0 translate-self-right bg-grey-darkest hover:bg-black rounded-br-lg focus:outline-none"
           >
             <div class="w-6 h-6 bg-contain chats-icon"></div>
           </button>
@@ -173,7 +173,7 @@
               rows="1"
               autofocus
             ></textarea>
-            <div id="typing" class="py-2 absolute pin-b hidden">
+            <div id="typing" class="py-2 absolute bottom-0 hidden">
               <div class="inline-flex">
                 <div
                   class="w-2 h-2 mr-1 bg-grey-lightest rounded-full animate-pulse"
@@ -193,13 +193,13 @@
         <!-- Users list -->
         <div
           id="users-container"
-          class="w-4/5 h-full sm:w-1/5 fixed sm:static pin-t pin-r bg-grey-darkest sm:rounded-r-lg transition-transform-2 translate-self-right sm:translate-x-none z-50 hidden"
+          class="w-4/5 h-full sm:w-1/5 fixed sm:static top-0 right-0 bg-grey-darkest sm:rounded-r-lg transition-transform-2 translate-self-right sm:translate-x-none z-50 hidden"
         >
           <ul id="users" class="px-8 pt-2 h-full list-reset overflow-auto"></ul>
 
           <button
             id="show-users-container-btn"
-            class="p-1 absolute sm:hidden pin-t pin-l translate-self-left bg-grey-darkest hover:bg-black rounded-bl-lg focus:outline-none"
+            class="p-1 absolute sm:hidden top-0 left-0 translate-self-left bg-grey-darkest hover:bg-black rounded-bl-lg focus:outline-none"
           >
             <div class="w-6 h-6 bg-contain users-icon"></div>
           </button>
